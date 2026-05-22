@@ -61,6 +61,17 @@ make down
 docker compose down -v   # also remove volumes (database data)
 ```
 
+## Troubleshooting
+
+If `make up` fails with `No space left on device` or postgres exits immediately, Docker Desktop's virtual disk is full. Reclaim space and restart:
+
+```bash
+make clean-docker
+make up
+```
+
+You can also increase Docker Desktop's disk limit under **Settings → Resources → Disk image size**.
+
 ## Re-seed catalog data
 
 ```bash
