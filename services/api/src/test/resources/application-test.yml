@@ -6,6 +6,22 @@ spring:
   flyway:
     enabled: true
 
+management:
+  defaults:
+    metrics:
+      export:
+        enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  tracing:
+    enabled: false
+
 app:
   jwt:
     secret: test-secret-key-for-integration-tests-min-256-bits-long-enough
