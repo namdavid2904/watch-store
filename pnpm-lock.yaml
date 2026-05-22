@@ -65,6 +65,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.62.0
         version: 5.100.11(react@19.2.6)
+      '@watch-store/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@watch-store/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -105,6 +108,15 @@ importers:
       tailwindcss:
         specifier: ^3.4.16
         version: 3.4.19
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/api-client:
+    devDependencies:
+      '@watch-store/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
