@@ -2,6 +2,7 @@ package com.watchstore.web.dto;
 
 import com.watchstore.domain.enums.Role;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 public record UserProfileResponse(
@@ -10,6 +11,7 @@ public record UserProfileResponse(
         String firstName,
         String lastName,
         Role role,
+        Map<String, Object> shippingAddress,
         Instant createdAt
 ) {
 }

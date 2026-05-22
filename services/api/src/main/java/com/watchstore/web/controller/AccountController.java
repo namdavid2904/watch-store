@@ -3,6 +3,7 @@ package com.watchstore.web.controller;
 import com.watchstore.security.SecurityUtils;
 import com.watchstore.service.AuthService;
 import com.watchstore.service.WishlistService;
+import com.watchstore.web.dto.PatchProfileRequest;
 import com.watchstore.web.dto.ProductResponse;
 import com.watchstore.web.dto.UpdateProfileRequest;
 import com.watchstore.web.dto.UserProfileResponse;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -39,6 +41,11 @@ public class AccountController {
                 SecurityUtils.requireCurrentUserId(),
                 request.firstName(),
                 request.lastName()));
+    }
+
+    @PatchMapping("/profile")
+    public ResponseEntity<UserProfileResponse> patchProfile(@Valid @RequestBody PatchProfileRequest request) {
+        return ResponseEntity.ok(authService.patchProfile(SecurityUtils.requireCurrentUserId(), request));
     }
 
     @GetMapping("/wishlist")

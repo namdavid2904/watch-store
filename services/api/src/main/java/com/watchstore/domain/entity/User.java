@@ -10,12 +10,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "users")
@@ -49,6 +52,10 @@ public class User {
 
     @Column(name = "oauth_id")
     private String oauthId;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "shipping_address", columnDefinition = "jsonb")
+    private Map<String, Object> shippingAddress;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

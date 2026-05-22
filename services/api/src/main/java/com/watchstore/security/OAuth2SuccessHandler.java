@@ -2,6 +2,7 @@ package com.watchstore.security;
 
 import com.watchstore.domain.entity.User;
 import com.watchstore.domain.enums.Role;
+import com.watchstore.exception.ApiException;
 import com.watchstore.repository.UserRepository;
 import com.watchstore.service.AuthService;
 import com.watchstore.web.dto.AuthResponse;
@@ -12,10 +13,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
@@ -24,6 +27,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final UserRepository userRepository;
     private final AuthService authService;
+    private final AuthCookieService authCookieService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
@@ -36,6 +41,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String oauthId = oauth2User.getAttribute("sub");
         String firstName = oauth2User.getAttribute("given_name");
         String lastName = oauth2User.getAttribute("family_name");
+
+        if (!StringUtils.hasText(email) || !StringUtils.hasText(oauthId)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Google account must provide email and subject");
+        }
 
         User user = userRepository.findByOauthProviderAndOauthId("google", oauthId)
                 .or(() -> userRepository.findByEmail(email))
@@ -57,11 +66,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         }
 
         AuthResponse tokens = authService.issueTokensForUser(user);
+        authCookieService.setRefreshTokenCookie(
+                response,
+                tokens.refreshToken(),
+                jwtTokenProvider.getRefreshTokenExpirationMs());
 
         String frontendUrl = allowedOrigins.split(",")[0].trim();
         String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/callback")
                 .queryParam("accessToken", URLEncoder.encode(tokens.accessToken(), StandardCharsets.UTF_8))
-                .queryParam("refreshToken", URLEncoder.encode(tokens.refreshToken(), StandardCharsets.UTF_8))
                 .build(true)
                 .toUriString();
 
