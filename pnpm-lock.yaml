@@ -13,6 +13,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.62.0
         version: 5.100.11(react@19.2.6)
+      '@watch-store/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@watch-store/auth':
         specifier: workspace:*
         version: link:../../packages/auth
