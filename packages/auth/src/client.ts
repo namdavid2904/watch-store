@@ -82,15 +82,17 @@ export function createAuthClient(apiBaseUrl: string) {
       password: string;
       firstName: string;
       lastName: string;
-    }) =>
+    }, cartSessionId?: string) =>
       request<PublicAuthResponse>("/api/v1/auth/register", {
         method: "POST",
         body: JSON.stringify(body),
+        headers: cartSessionId ? { "X-Cart-Session-Id": cartSessionId } : undefined,
       }),
-    login: (body: { email: string; password: string }) =>
+    login: (body: { email: string; password: string }, cartSessionId?: string) =>
       request<PublicAuthResponse>("/api/v1/auth/login", {
         method: "POST",
         body: JSON.stringify(body),
+        headers: cartSessionId ? { "X-Cart-Session-Id": cartSessionId } : undefined,
       }),
     logout: () =>
       request<void>("/api/v1/auth/logout", {
