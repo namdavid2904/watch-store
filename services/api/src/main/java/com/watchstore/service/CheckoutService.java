@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CheckoutService {
 
     private static final String CHECKOUT_LOCK_PREFIX = "checkout:lock:";
@@ -153,6 +155,8 @@ public class CheckoutService {
             clearCheckoutSession(userId, sessionId, request.checkoutId());
 
             ordersCreatedTotal.increment();
+            log.info("order created orderId={} userId={} total={} itemCount={}",
+                    order.getId(), userId, total, order.getOrderItems().size());
 
             return new CheckoutConfirmResponse(
                     order.getId(),

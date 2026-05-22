@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final String AUTH_PATH_PREFIX = "/api/v1/auth/";
@@ -36,6 +38,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         String clientKey = "ratelimit:auth:" + resolveClientKey(request);
         if (!tryConsume(clientKey)) {
+            log.warn("auth rate limit exceeded clientKey={}", clientKey);
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.getWriter().write("{\"message\":\"Rate limit exceeded\"}");
             return;
