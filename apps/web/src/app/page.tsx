@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@watch-store/ui";
 
 export default function HomePage() {
@@ -8,7 +9,7 @@ export default function HomePage() {
         Discover automatic, quartz, and manual watches from the world&apos;s finest brands.
       </p>
       <Button asChild>
-        <a href="/shop">Browse Collection</a>
+        <Link href="/shop">Browse Collection</Link>
       </Button>
     </section>
   );

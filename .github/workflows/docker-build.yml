@@ -1,0 +1,38 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  build-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./services/api
+          file: ./services/api/Dockerfile
+          push: false
+          tags: watch-store-api:ci
+
+      - name: Build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/web/Dockerfile
+          push: false
+          tags: watch-store-web:ci
+
+      - name: Build admin image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/admin/Dockerfile
+          push: false
+          tags: watch-store-admin:ci

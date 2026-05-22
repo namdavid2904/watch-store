@@ -69,16 +69,24 @@ function buildQuery(params: ProductSearchParams = {}): string {
   return serialized ? `?${serialized}` : "";
 }
 
+type NextFetchInit = RequestInit & {
+  next?: {
+    revalidate?: number | false;
+    tags?: string[];
+  };
+};
+
 export function createCatalogClient(apiBaseUrl: string) {
-  async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const response = await fetch(`${apiBaseUrl}${path}`, {
+  async function request<T>(path: string, init?: NextFetchInit): Promise<T> {
+    const requestInit: NextFetchInit = {
       ...init,
       headers: {
         Accept: "application/json",
         ...(init?.headers ?? {}),
       },
       next: init?.next ?? { revalidate: 60 },
-    });
+    };
+    const response = await fetch(`${apiBaseUrl}${path}`, requestInit as RequestInit);
 
     if (!response.ok) {
       throw new Error(`Catalog request failed: ${response.status}`);
