@@ -5,7 +5,9 @@ import java.util.UUID;
 
 public interface PaymentGateway {
 
-    String createPaymentIntent(UUID orderId, BigDecimal amount, String currency);
+    PaymentIntentResult createPaymentIntent(UUID orderId, BigDecimal amount, String currency);
 
     boolean verifyWebhookSignature(String payload, String signature);
+
+    void handlePaymentSucceeded(String paymentIntentId);
 }

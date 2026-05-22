@@ -79,7 +79,6 @@ public class InventoryService {
                 throw new InsufficientStockException("Reservation expired or invalid for product " + entry.getKey());
             }
             inventory.setQuantityReserved(inventory.getQuantityReserved() - qty);
-            inventory.setQuantityAvailable(inventory.getQuantityAvailable() - qty);
         }
         clearReservation(checkoutId);
     }

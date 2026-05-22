@@ -8,6 +8,7 @@ import com.watchstore.domain.enums.OrderStatus;
 import com.watchstore.exception.ApiException;
 import com.watchstore.exception.ResourceNotFoundException;
 import com.watchstore.infrastructure.stripe.PaymentGateway;
+import com.watchstore.infrastructure.stripe.PaymentIntentResult;
 import com.watchstore.repository.OrderRepository;
 import com.watchstore.repository.ProductRepository;
 import com.watchstore.repository.UserRepository;
@@ -81,7 +82,10 @@ public class CheckoutService {
                     product.getId(), product.getName(), entry.getValue(), product.getPrice()));
         }
 
-        stringRedisTemplate.opsForValue().set("checkout:" + checkoutId, userId != null ? userId.toString() : sessionId, CHECKOUT_TTL);
+        stringRedisTemplate.opsForValue().set(
+                checkoutSessionKey(checkoutId),
+                userId != null ? userId.toString() : sessionId,
+                CHECKOUT_TTL);
 
         return new CheckoutInitiateResponse(
                 checkoutId,
@@ -92,8 +96,8 @@ public class CheckoutService {
     }
 
     @Transactional
-    public CheckoutConfirmResponse confirm(UUID userId, CheckoutConfirmRequest request) {
-        String ownerKey = stringRedisTemplate.opsForValue().get("checkout:" + request.checkoutId());
+    public CheckoutConfirmResponse confirm(UUID userId, String sessionId, CheckoutConfirmRequest request) {
+        String ownerKey = stringRedisTemplate.opsForValue().get(checkoutSessionKey(request.checkoutId()));
         if (ownerKey == null) {
             checkoutFailuresTotal.increment();
             throw new ApiException(HttpStatus.GONE, "Checkout session expired");
@@ -102,6 +106,11 @@ public class CheckoutService {
         if (userId == null) {
             checkoutFailuresTotal.increment();
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Login required to confirm checkout");
+        }
+
+        if (!matchesOwner(ownerKey, userId, sessionId)) {
+            checkoutFailuresTotal.increment();
+            throw new ApiException(HttpStatus.FORBIDDEN, "Checkout session does not belong to caller");
         }
 
         User user = userRepository.findById(userId)
@@ -136,21 +145,44 @@ public class CheckoutService {
             order.setTotalAmount(total);
             orderRepository.save(order);
 
-            String paymentIntentId = paymentGateway.createPaymentIntent(order.getId(), total, "USD");
-            order.setPaymentIntentId(paymentIntentId);
+            PaymentIntentResult paymentIntent = paymentGateway.createPaymentIntent(order.getId(), total, "USD");
+            order.setPaymentIntentId(paymentIntent.paymentIntentId());
             orderRepository.save(order);
 
             cartService.clearCart(userId, null);
-            stringRedisTemplate.delete(CHECKOUT_LOCK_PREFIX + userId);
-            stringRedisTemplate.delete("checkout:" + request.checkoutId());
+            clearCheckoutSession(userId, sessionId, request.checkoutId());
 
             ordersCreatedTotal.increment();
 
-            return new CheckoutConfirmResponse(order.getId(), order.getStatus(), order.getTotalAmount(), paymentIntentId);
+            return new CheckoutConfirmResponse(
+                    order.getId(),
+                    order.getStatus(),
+                    order.getTotalAmount(),
+                    paymentIntent.paymentIntentId(),
+                    paymentIntent.clientSecret());
         } catch (RuntimeException e) {
             checkoutFailuresTotal.increment();
             inventoryService.releaseReservation(request.checkoutId());
             throw e;
         }
+    }
+
+    private boolean matchesOwner(String ownerKey, UUID userId, String sessionId) {
+        if (ownerKey.equals(userId.toString())) {
+            return true;
+        }
+        return sessionId != null && !sessionId.isBlank() && ownerKey.equals(sessionId);
+    }
+
+    private void clearCheckoutSession(UUID userId, String sessionId, UUID checkoutId) {
+        stringRedisTemplate.delete(CHECKOUT_LOCK_PREFIX + userId);
+        if (sessionId != null && !sessionId.isBlank()) {
+            stringRedisTemplate.delete(CHECKOUT_LOCK_PREFIX + sessionId);
+        }
+        stringRedisTemplate.delete(checkoutSessionKey(checkoutId));
+    }
+
+    private String checkoutSessionKey(UUID checkoutId) {
+        return "checkout:" + checkoutId;
     }
 }

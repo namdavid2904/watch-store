@@ -30,8 +30,10 @@ public class CheckoutController {
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<CheckoutConfirmResponse> confirm(@Valid @RequestBody CheckoutConfirmRequest request) {
+    public ResponseEntity<CheckoutConfirmResponse> confirm(
+            @RequestHeader(value = "X-Cart-Session-Id", required = false) String sessionId,
+            @Valid @RequestBody CheckoutConfirmRequest request) {
         UUID userId = SecurityUtils.requireCurrentUserId();
-        return ResponseEntity.ok(checkoutService.confirm(userId, request));
+        return ResponseEntity.ok(checkoutService.confirm(userId, sessionId, request));
     }
 }

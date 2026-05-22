@@ -8,6 +8,7 @@ public record CheckoutConfirmResponse(
         UUID orderId,
         OrderStatus status,
         BigDecimal totalAmount,
-        String paymentIntentId
+        String paymentIntentId,
+        String paymentClientSecret
 ) {
 }
