@@ -3,12 +3,16 @@ package com.watchstore.service;
 import com.watchstore.domain.entity.Product;
 import com.watchstore.exception.ApiException;
 import com.watchstore.exception.ResourceNotFoundException;
+import com.watchstore.infrastructure.redis.CartEntry;
 import com.watchstore.repository.ProductRepository;
 import com.watchstore.web.dto.AddCartItemRequest;
 import com.watchstore.web.dto.CartItemResponse;
 import com.watchstore.web.dto.CartResponse;
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,13 +28,16 @@ public class CartService {
 
     private static final String GUEST_PREFIX = "cart:guest:";
     private static final String USER_PREFIX = "cart:";
+    private static final Duration AUTH_TTL = Duration.ofDays(30);
+    private static final Duration GUEST_TTL = Duration.ofDays(7);
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
 
     public CartResponse getCart(UUID userId, String sessionId) {
-        Map<Object, Object> entries = hashOps().entries(cartKey(userId, sessionId));
-        return buildCartResponse(entries);
+        String key = cartKey(userId, sessionId);
+        Map<Object, Object> entries = hashOps().entries(key);
+        return buildCartResponse(key, entries);
     }
 
     public CartResponse addItem(UUID userId, String sessionId, AddCartItemRequest request) {
@@ -39,31 +46,41 @@ public class CartService {
 
         String key = cartKey(userId, sessionId);
         String field = product.getId().toString();
-        Object existing = hashOps().get(key, field);
-        int newQty = request.quantity();
-        if (existing instanceof Number number) {
-            newQty += number.intValue();
-        }
-        hashOps().put(key, field, newQty);
+        CartEntry existing = readEntry(hashOps().get(key, field), product.getPrice());
+        CartEntry updated = new CartEntry(
+                existing.quantity() + request.quantity(),
+                product.getPrice(),
+                existing.addedAt() != null ? existing.addedAt() : Instant.now()
+        );
+        hashOps().put(key, field, updated);
+        refreshExpiry(key, userId);
         return getCart(userId, sessionId);
     }
 
     public CartResponse updateItemQuantity(UUID userId, String sessionId, UUID productId, int quantity) {
+        String key = cartKey(userId, sessionId);
         if (quantity <= 0) {
-            hashOps().delete(cartKey(userId, sessionId), productId.toString());
+            hashOps().delete(key, productId.toString());
         } else {
-            hashOps().put(cartKey(userId, sessionId), productId.toString(), quantity);
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+            CartEntry existing = readEntry(hashOps().get(key, productId.toString()), product.getPrice());
+            hashOps().put(key, productId.toString(), new CartEntry(quantity, product.getPrice(), existing.addedAt()));
         }
+        refreshExpiry(key, userId);
         return getCart(userId, sessionId);
     }
 
     public CartResponse removeItem(UUID userId, String sessionId, UUID productId) {
-        hashOps().delete(cartKey(userId, sessionId), productId.toString());
+        String key = cartKey(userId, sessionId);
+        hashOps().delete(key, productId.toString());
+        refreshExpiry(key, userId);
         return getCart(userId, sessionId);
     }
 
-    public void clearCart(UUID userId, String sessionId) {
+    public CartResponse clearCart(UUID userId, String sessionId) {
         redisTemplate.delete(cartKey(userId, sessionId));
+        return new CartResponse(List.of(), 0, BigDecimal.ZERO, List.of());
     }
 
     public void mergeGuestCartIntoUser(UUID userId, String sessionId) {
@@ -76,17 +93,27 @@ public class CartService {
         if (guestItems.isEmpty()) {
             return;
         }
+
         for (Map.Entry<Object, Object> entry : guestItems.entrySet()) {
             String productId = entry.getKey().toString();
-            int guestQty = ((Number) entry.getValue()).intValue();
-            Object existing = hashOps().get(userKey, productId);
-            int totalQty = guestQty;
-            if (existing instanceof Number number) {
-                totalQty += number.intValue();
+            Product product = productRepository.findById(UUID.fromString(productId)).orElse(null);
+            if (product == null) {
+                continue;
             }
-            hashOps().put(userKey, productId, totalQty);
+            CartEntry guestEntry = readEntry(entry.getValue(), product.getPrice());
+            CartEntry existing = readEntry(hashOps().get(userKey, productId), product.getPrice());
+            hashOps().put(
+                    userKey,
+                    productId,
+                    new CartEntry(
+                            existing.quantity() + guestEntry.quantity(),
+                            product.getPrice(),
+                            guestEntry.addedAt() != null ? guestEntry.addedAt() : Instant.now()
+                    )
+            );
         }
         redisTemplate.delete(guestKey);
+        refreshExpiry(userKey, userId);
     }
 
     public Map<UUID, Integer> getCartItems(UUID userId, String sessionId) {
@@ -94,26 +121,40 @@ public class CartService {
         return entries.entrySet().stream()
                 .collect(java.util.stream.Collectors.toMap(
                         e -> UUID.fromString(e.getKey().toString()),
-                        e -> ((Number) e.getValue()).intValue()
+                        e -> readEntry(e.getValue(), BigDecimal.ZERO).quantity()
                 ));
     }
 
-    private CartResponse buildCartResponse(Map<Object, Object> entries) {
+    private CartResponse buildCartResponse(String key, Map<Object, Object> entries) {
         List<CartItemResponse> items = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
         int itemCount = 0;
 
-        for (Map.Entry<Object, Object> entry : entries.entrySet()) {
+        Iterator<Map.Entry<Object, Object>> iterator = entries.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Object, Object> entry = iterator.next();
             UUID productId = UUID.fromString(entry.getKey().toString());
-            int quantity = ((Number) entry.getValue()).intValue();
-            Product product = productRepository.findById(productId)
-                    .orElse(null);
+            CartEntry cartEntry = readEntry(entry.getValue(), null);
+            Product product = productRepository.findById(productId).orElse(null);
+
             if (product == null) {
+                hashOps().delete(key, productId.toString());
+                warnings.add("A product in your cart is no longer available and was removed.");
                 continue;
             }
-            BigDecimal lineTotal = product.getPrice().multiply(BigDecimal.valueOf(quantity));
+
+            if (cartEntry.unitPrice() != null
+                    && cartEntry.unitPrice().compareTo(product.getPrice()) != 0) {
+                warnings.add("%s price updated from %s to %s.".formatted(
+                        product.getName(),
+                        cartEntry.unitPrice(),
+                        product.getPrice()));
+            }
+
+            BigDecimal lineTotal = product.getPrice().multiply(BigDecimal.valueOf(cartEntry.quantity()));
             subtotal = subtotal.add(lineTotal);
-            itemCount += quantity;
+            itemCount += cartEntry.quantity();
             String imageUrl = product.getImages().isEmpty() ? null : product.getImages().getFirst();
             items.add(new CartItemResponse(
                     product.getId(),
@@ -121,12 +162,39 @@ public class CartService {
                     product.getSlug(),
                     product.getPrice(),
                     imageUrl,
-                    quantity,
+                    cartEntry.quantity(),
                     lineTotal
             ));
         }
 
-        return new CartResponse(items, itemCount, subtotal);
+        return new CartResponse(items, itemCount, subtotal, warnings);
+    }
+
+    private CartEntry readEntry(Object value, BigDecimal fallbackPrice) {
+        if (value == null) {
+            return new CartEntry(0, fallbackPrice, null);
+        }
+        if (value instanceof CartEntry entry) {
+            return entry;
+        }
+        if (value instanceof Map<?, ?> map) {
+            int quantity = map.get("quantity") instanceof Number number ? number.intValue() : 1;
+            BigDecimal unitPrice = map.get("unitPrice") instanceof Number price
+                    ? BigDecimal.valueOf(((Number) price).doubleValue())
+                    : fallbackPrice;
+            Instant addedAt = map.get("addedAt") instanceof String text
+                    ? Instant.parse(text)
+                    : Instant.now();
+            return new CartEntry(quantity, unitPrice, addedAt);
+        }
+        if (value instanceof Number number) {
+            return new CartEntry(number.intValue(), fallbackPrice, Instant.now());
+        }
+        return new CartEntry(1, fallbackPrice, Instant.now());
+    }
+
+    private void refreshExpiry(String key, UUID userId) {
+        redisTemplate.expire(key, userId != null ? AUTH_TTL : GUEST_TTL);
     }
 
     private String cartKey(UUID userId, String sessionId) {

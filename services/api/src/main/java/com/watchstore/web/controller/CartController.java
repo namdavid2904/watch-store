@@ -57,4 +57,19 @@ public class CartController {
         UUID userId = SecurityUtils.getCurrentUser().map(u -> u.getId()).orElse(null);
         return ResponseEntity.ok(cartService.removeItem(userId, sessionId, productId));
     }
+
+    @DeleteMapping
+    public ResponseEntity<CartResponse> clearCart(
+            @RequestHeader(value = "X-Cart-Session-Id", required = false) String sessionId) {
+        UUID userId = SecurityUtils.getCurrentUser().map(u -> u.getId()).orElse(null);
+        return ResponseEntity.ok(cartService.clearCart(userId, sessionId));
+    }
+
+    @PostMapping("/merge")
+    public ResponseEntity<CartResponse> mergeGuestCart(
+            @RequestHeader("X-Cart-Session-Id") String sessionId) {
+        UUID userId = SecurityUtils.requireCurrentUserId();
+        cartService.mergeGuestCartIntoUser(userId, sessionId);
+        return ResponseEntity.ok(cartService.getCart(userId, null));
+    }
 }

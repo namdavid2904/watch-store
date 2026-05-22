@@ -36,8 +36,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<PublicAuthResponse> register(@Valid @RequestBody AuthRegisterRequest request,
+                                                       @RequestHeader(value = "X-Cart-Session-Id", required = false) String sessionId,
                                                        HttpServletResponse response) {
         AuthResponse tokens = authService.register(request);
+        cartService.mergeGuestCartIntoUser(tokens.userId(), sessionId);
         writeRefreshCookie(response, tokens);
         return ResponseEntity.status(HttpStatus.CREATED).body(PublicAuthResponse.from(tokens));
     }
