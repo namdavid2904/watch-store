@@ -60,3 +60,20 @@ Run the Spring Boot app from `services/api` with profile `dev` and env vars matc
 make down
 docker compose down -v   # also remove volumes (database data)
 ```
+
+## Re-seed catalog data
+
+```bash
+make seed
+# or: ./scripts/seed-dev-data.sh
+```
+
+This resets the postgres volume and reapplies Flyway migrations with seed data.
+
+## API tests
+
+Requires Docker running (Testcontainers):
+
+```bash
+make api-test
+```
