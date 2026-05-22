@@ -30,7 +30,7 @@ function OAuthCallbackContent() {
 
       const client = createAuthClient(API_URL);
       const profile = await client.getProfile();
-      completeOAuthLogin({
+      await completeOAuthLogin({
         accessToken,
         userId: profile.id,
         email: profile.email,

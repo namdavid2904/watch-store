@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Button } from "@watch-store/ui";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductSpecsTable } from "@/components/product-specs-table";
 import { catalogClient, formatPrice } from "@/lib/catalog";
 
@@ -55,7 +55,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               ? `${product.quantityAvailable} in stock`
               : "Currently unavailable"}
           </p>
-          <Button disabled={product.quantityAvailable <= 0}>Add to Cart</Button>
+          <AddToCartButton productId={product.id} disabled={product.quantityAvailable <= 0} />
         </div>
       </div>
 

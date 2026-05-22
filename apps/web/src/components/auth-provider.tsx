@@ -3,12 +3,15 @@
 import {
   createAuthClient,
   clearAuthSession,
+  getAccessToken,
   getAuthSession,
   setAuthSession,
   type AuthClient,
   type PublicAuthResponse,
 } from "@watch-store/auth";
+import { createCartClient } from "@watch-store/api-client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { getCartSessionId } from "@/lib/cart-session";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -24,10 +27,18 @@ interface AuthContextValue {
     lastName: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
-  completeOAuthLogin: (response: PublicAuthResponse) => void;
+  completeOAuthLogin: (response: PublicAuthResponse) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+async function mergeGuestCartAfterAuth() {
+  const cartClient = createCartClient(API_URL, () => ({
+    accessToken: getAccessToken(),
+    cartSessionId: getCartSessionId(),
+  }));
+  await cartClient.mergeGuestCart();
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState(getAuthSession());
@@ -43,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const response = await client.login({ email, password });
+      const response = await client.login({ email, password }, getCartSessionId());
       setAuthSession(response);
       setUser(getAuthSession());
     },
@@ -52,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = useCallback(
     async (input: { email: string; password: string; firstName: string; lastName: string }) => {
-      const response = await client.register(input);
+      const response = await client.register(input, getCartSessionId());
       setAuthSession(response);
       setUser(getAuthSession());
     },
@@ -68,9 +79,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [client]);
 
-  const completeOAuthLogin = useCallback((response: PublicAuthResponse) => {
+  const completeOAuthLogin = useCallback(async (response: PublicAuthResponse) => {
     setAuthSession(response);
     setUser(getAuthSession());
+    try {
+      await mergeGuestCartAfterAuth();
+    } catch {
+      // Guest cart merge is best-effort after OAuth.
+    }
   }, []);
 
   const value = useMemo(
