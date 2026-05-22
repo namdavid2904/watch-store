@@ -25,6 +25,9 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
   security:
     oauth2:
       client:
@@ -76,6 +79,8 @@ app:
     refresh-token-expiration-ms: 604800000
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:3002}
+  frontend:
+    web-url: ${FRONTEND_WEB_URL:}
   s3:
     bucket: ${S3_BUCKET:watch-store-images}
     endpoint: ${S3_ENDPOINT:http://localhost:4566}
@@ -86,6 +91,7 @@ app:
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_placeholder}
   auth:
     refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}
+    refresh-cookie-same-site: ${REFRESH_COOKIE_SAME_SITE:Lax}
 
 logging:
   level:

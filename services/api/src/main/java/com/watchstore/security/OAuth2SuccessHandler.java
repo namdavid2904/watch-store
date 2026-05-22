@@ -33,6 +33,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
+    @Value("${app.frontend.web-url:}")
+    private String frontendWebUrl;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
@@ -71,7 +74,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 tokens.refreshToken(),
                 jwtTokenProvider.getRefreshTokenExpirationMs());
 
-        String frontendUrl = allowedOrigins.split(",")[0].trim();
+        String frontendUrl = StringUtils.hasText(frontendWebUrl)
+                ? frontendWebUrl.trim()
+                : allowedOrigins.split(",")[0].trim();
         String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/callback")
                 .queryParam("accessToken", URLEncoder.encode(tokens.accessToken(), StandardCharsets.UTF_8))
                 .build(true)

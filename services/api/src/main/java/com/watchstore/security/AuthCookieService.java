@@ -18,26 +18,25 @@ public class AuthCookieService {
     @Value("${app.auth.refresh-cookie-secure:false}")
     private boolean secure;
 
+    @Value("${app.auth.refresh-cookie-same-site:Lax}")
+    private String sameSite;
+
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken, long maxAgeMs) {
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE_NAME, refreshToken)
-                .httpOnly(true)
-                .secure(secure)
-                .path("/api/v1/auth")
-                .sameSite("Lax")
-                .maxAge(maxAgeMs / 1000)
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(refreshToken, maxAgeMs / 1000).toString());
     }
 
     public void clearRefreshTokenCookie(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE_NAME, "")
+        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie("", 0).toString());
+    }
+
+    private ResponseCookie buildCookie(String value, long maxAgeSeconds) {
+        return ResponseCookie.from(REFRESH_COOKIE_NAME, value)
                 .httpOnly(true)
                 .secure(secure)
                 .path("/api/v1/auth")
-                .sameSite("Lax")
-                .maxAge(0)
+                .sameSite(sameSite)
+                .maxAge(maxAgeSeconds)
                 .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     public Optional<String> readRefreshToken(HttpServletRequest request) {

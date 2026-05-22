@@ -1,8 +1,11 @@
 # Production overlay — use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+# For Vercel frontends, run only backing services + API (omit web/admin) or use managed DB/Redis/S3.
 services:
   api:
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      REFRESH_COOKIE_SECURE: "true"
+      REFRESH_COOKIE_SAME_SITE: None
     restart: unless-stopped
 
   web:

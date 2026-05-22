@@ -1,5 +1,7 @@
 # Local Development
 
+For production deployment (Vercel + Docker API), see [deployment.md](./deployment.md).
+
 ## Prerequisites
 
 - Docker Desktop (or Docker Engine + Compose v2)

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const s3ImageHostname = process.env.S3_IMAGE_HOSTNAME;
+
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: path.join(__dirname, "../.."),
@@ -8,6 +10,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "http", hostname: "localhost", port: "4566" },
+      ...(s3ImageHostname
+        ? [{ protocol: "https" as const, hostname: s3ImageHostname }]
+        : []),
       { protocol: "https", hostname: "**" },
     ],
   },

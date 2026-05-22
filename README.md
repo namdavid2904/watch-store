@@ -35,9 +35,15 @@ apps/admin/        Admin dashboard Next.js app
 packages/ui/       Shared UI components (shadcn/ui)
 packages/api-client/  OpenAPI-generated TypeScript client
 services/api/      Spring Boot REST API
-infra/             Docker, K8s, Terraform configs
+infra/             Docker observability + deploy examples (Render, Fly)
 docs/              Architecture and deployment docs
 ```
+
+## Deployment
+
+Production: **Vercel** (web + admin) + **Docker API** + managed Postgres, Redis, and AWS S3.
+
+See [docs/deployment.md](docs/deployment.md) for the full checklist, env vars, and AWS migration path.
 
 ## Development
 
