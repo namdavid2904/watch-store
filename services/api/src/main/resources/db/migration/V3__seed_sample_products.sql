@@ -1,0 +1,46 @@
+INSERT INTO products (id, name, slug, description, price, brand_id, category_id, color, images, movement_type, case_material, case_dimension, water_resistance, case_thickness, power_reserve, movement_reference) VALUES
+('c1000000-0000-4000-8000-000000000001', 'Rolex Submariner Date', 'rolex-submariner-date', 'Iconic diving watch with Cerachrom bezel and Oystersteel case.', 9550.00, 'a1000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000003', 'Black', '[]', 'AUTOMATIC', 'Oystersteel', '41mm', '300m', '12.5mm', '70 hours', 'Calibre 3235'),
+('c1000000-0000-4000-8000-000000000002', 'Rolex Datejust 36', 'rolex-datejust-36', 'Classic dress watch with Jubilee bracelet.', 7850.00, 'a1000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001', 'Silver', '[]', 'AUTOMATIC', 'Oystersteel', '36mm', '100m', '12mm', '70 hours', 'Calibre 3235'),
+('c1000000-0000-4000-8000-000000000003', 'Omega Seamaster Diver 300M', 'omega-seamaster-diver-300m', 'Professional diving watch with Master Chronometer certification.', 5400.00, 'a1000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000003', 'Blue', '[]', 'AUTOMATIC', 'Stainless Steel', '42mm', '300m', '13.4mm', '55 hours', 'Calibre 8800'),
+('c1000000-0000-4000-8000-000000000004', 'Omega Speedmaster Moonwatch', 'omega-speedmaster-moonwatch', 'Legendary chronograph worn on the moon.', 6350.00, 'a1000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000004', 'Black', '[]', 'MANUAL', 'Stainless Steel', '42mm', '50m', '13.2mm', '50 hours', 'Calibre 3861'),
+('c1000000-0000-4000-8000-000000000005', 'Tissot PRX Powermatic 80', 'tissot-prx-powermatic-80', 'Retro-inspired integrated bracelet sports watch.', 650.00, 'a1000000-0000-4000-8000-000000000003', 'b1000000-0000-4000-8000-000000000002', 'Blue', '[]', 'AUTOMATIC', 'Stainless Steel', '40mm', '100m', '10.9mm', '80 hours', 'Powermatic 80'),
+('c1000000-0000-4000-8000-000000000006', 'Tissot Gentleman Powermatic 80', 'tissot-gentleman-powermatic-80', 'Versatile dress watch with silicon balance spring.', 775.00, 'a1000000-0000-4000-8000-000000000003', 'b1000000-0000-4000-8000-000000000001', 'Green', '[]', 'AUTOMATIC', 'Stainless Steel', '40mm', '100m', '10.6mm', '80 hours', 'Powermatic 80'),
+('c1000000-0000-4000-8000-000000000007', 'Seiko Prospex Turtle', 'seiko-prospex-turtle', 'Beloved diver with iconic cushion case.', 495.00, 'a1000000-0000-4000-8000-000000000004', 'b1000000-0000-4000-8000-000000000003', 'Black', '[]', 'AUTOMATIC', 'Stainless Steel', '45mm', '200m', '13.2mm', '41 hours', '4R36'),
+('c1000000-0000-4000-8000-000000000008', 'Seiko Presage Cocktail Time', 'seiko-presage-cocktail-time', 'Elegant dress watch with textured dial.', 425.00, 'a1000000-0000-4000-8000-000000000004', 'b1000000-0000-4000-8000-000000000001', 'Blue', '[]', 'AUTOMATIC', 'Stainless Steel', '40.5mm', '50m', '11.8mm', '41 hours', '4R35'),
+('c1000000-0000-4000-8000-000000000009', 'TAG Heuer Carrera Chronograph', 'tag-heuer-carrera-chronograph', 'Motorsport-inspired chronograph with tachymeter bezel.', 6200.00, 'a1000000-0000-4000-8000-000000000005', 'b1000000-0000-4000-8000-000000000004', 'Silver', '[]', 'AUTOMATIC', 'Stainless Steel', '44mm', '100m', '15.3mm', '80 hours', 'Calibre Heuer 02'),
+('c1000000-0000-4000-8000-000000000010', 'TAG Heuer Formula 1', 'tag-heuer-formula-1', 'Sporty quartz watch built for everyday wear.', 1200.00, 'a1000000-0000-4000-8000-000000000005', 'b1000000-0000-4000-8000-000000000002', 'Red', '[]', 'QUARTZ', 'Stainless Steel', '43mm', '200m', '11.5mm', 'Battery', 'Quartz'),
+('c1000000-0000-4000-8000-000000000011', 'Citizen Eco-Drive Promaster', 'citizen-eco-drive-promaster', 'Solar-powered diver with unidirectional bezel.', 395.00, 'a1000000-0000-4000-8000-000000000006', 'b1000000-0000-4000-8000-000000000003', 'Black', '[]', 'QUARTZ', 'Stainless Steel', '44mm', '200m', '12mm', 'Solar', 'E168'),
+('c1000000-0000-4000-8000-000000000012', 'Citizen Tsuyosa', 'citizen-tsuyosa', 'Integrated bracelet automatic with gradient dial.', 450.00, 'a1000000-0000-4000-8000-000000000006', 'b1000000-0000-4000-8000-000000000002', 'Green', '[]', 'AUTOMATIC', 'Stainless Steel', '40mm', '50m', '11.7mm', '42 hours', '8210'),
+('c1000000-0000-4000-8000-000000000013', 'Rolex GMT-Master II', 'rolex-gmt-master-ii', 'Dual-time zone travel watch with Pepsi bezel.', 10250.00, 'a1000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000002', 'Blue/Red', '[]', 'AUTOMATIC', 'Oystersteel', '40mm', '100m', '12mm', '70 hours', 'Calibre 3285'),
+('c1000000-0000-4000-8000-000000000014', 'Omega Aqua Terra 150M', 'omega-aqua-terra-150m', 'Refined sports watch with teak-pattern dial.', 5900.00, 'a1000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000002', 'Blue', '[]', 'AUTOMATIC', 'Stainless Steel', '41mm', '150m', '12.7mm', '55 hours', 'Calibre 8900'),
+('c1000000-0000-4000-8000-000000000015', 'Tissot Le Locle Powermatic 80', 'tissot-le-locle-powermatic-80', 'Classic dress watch with exhibition caseback.', 595.00, 'a1000000-0000-4000-8000-000000000003', 'b1000000-0000-4000-8000-000000000001', 'White', '[]', 'AUTOMATIC', 'Stainless Steel', '39.3mm', '30m', '9.8mm', '80 hours', 'Powermatic 80'),
+('c1000000-0000-4000-8000-000000000016', 'Seiko 5 Sports SRPD', 'seiko-5-sports-srpd', 'Affordable automatic with day-date display.', 275.00, 'a1000000-0000-4000-8000-000000000004', 'b1000000-0000-4000-8000-000000000002', 'Orange', '[]', 'AUTOMATIC', 'Stainless Steel', '42.5mm', '100m', '13.4mm', '41 hours', '4R36'),
+('c1000000-0000-4000-8000-000000000017', 'TAG Heuer Aquaracer', 'tag-heuer-aquaracer', 'Robust diving watch with ceramic bezel.', 2800.00, 'a1000000-0000-4000-8000-000000000005', 'b1000000-0000-4000-8000-000000000003', 'Black', '[]', 'AUTOMATIC', 'Stainless Steel', '43mm', '300m', '12.1mm', '38 hours', 'Calibre 5'),
+('c1000000-0000-4000-8000-000000000018', 'Citizen Promaster Skyhawk', 'citizen-promaster-skyhawk', 'Pilot chronograph with atomic timekeeping.', 525.00, 'a1000000-0000-4000-8000-000000000006', 'b1000000-0000-4000-8000-000000000004', 'Black', '[]', 'QUARTZ', 'Titanium', '45mm', '200m', '13mm', 'Solar', 'U680'),
+('c1000000-0000-4000-8000-000000000019', 'Rolex Oyster Perpetual 41', 'rolex-oyster-perpetual-41', 'Minimalist everyday watch with vibrant dial options.', 6600.00, 'a1000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001', 'Turquoise', '[]', 'AUTOMATIC', 'Oystersteel', '41mm', '100m', '11mm', '70 hours', 'Calibre 3230'),
+('c1000000-0000-4000-8000-000000000020', 'Omega De Ville Prestige', 'omega-de-ville-prestige', 'Elegant dress watch with Roman numeral dial.', 4100.00, 'a1000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000001', 'Silver', '[]', 'AUTOMATIC', 'Stainless Steel', '39.5mm', '30m', '10.8mm', '48 hours', 'Calibre 8800');
+
+INSERT INTO inventory (product_id, quantity_available, quantity_reserved) VALUES
+('c1000000-0000-4000-8000-000000000001', 3, 0),
+('c1000000-0000-4000-8000-000000000002', 5, 0),
+('c1000000-0000-4000-8000-000000000003', 8, 0),
+('c1000000-0000-4000-8000-000000000004', 4, 0),
+('c1000000-0000-4000-8000-000000000005', 15, 0),
+('c1000000-0000-4000-8000-000000000006', 12, 0),
+('c1000000-0000-4000-8000-000000000007', 10, 0),
+('c1000000-0000-4000-8000-000000000008', 20, 0),
+('c1000000-0000-4000-8000-000000000009', 6, 0),
+('c1000000-0000-4000-8000-000000000010', 25, 0),
+('c1000000-0000-4000-8000-000000000011', 18, 0),
+('c1000000-0000-4000-8000-000000000012', 14, 0),
+('c1000000-0000-4000-8000-000000000013', 2, 0),
+('c1000000-0000-4000-8000-000000000014', 7, 0),
+('c1000000-0000-4000-8000-000000000015', 16, 0),
+('c1000000-0000-4000-8000-000000000016', 30, 0),
+('c1000000-0000-4000-8000-000000000017', 9, 0),
+('c1000000-0000-4000-8000-000000000018', 11, 0),
+('c1000000-0000-4000-8000-000000000019', 4, 0),
+('c1000000-0000-4000-8000-000000000020', 6, 0);
+
+-- Update search vectors
+UPDATE products SET description = description;
