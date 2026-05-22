@@ -9,10 +9,12 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,8 +25,9 @@ public class AdminInventoryController {
     private final InventoryService inventoryService;
 
     @GetMapping
-    public ResponseEntity<List<InventoryResponse>> listInventory() {
-        return ResponseEntity.ok(inventoryService.listAll());
+    public ResponseEntity<List<InventoryResponse>> listInventory(
+            @RequestParam(required = false) Boolean lowStock) {
+        return ResponseEntity.ok(inventoryService.listAll(lowStock));
     }
 
     @GetMapping("/{productId}")
@@ -33,6 +36,12 @@ public class AdminInventoryController {
     }
 
     @PutMapping("/{productId}")
+    public ResponseEntity<InventoryResponse> adjustInventoryPut(@PathVariable UUID productId,
+                                                                @Valid @RequestBody AdjustInventoryRequest request) {
+        return ResponseEntity.ok(inventoryService.adjustStock(productId, request));
+    }
+
+    @PatchMapping("/{productId}")
     public ResponseEntity<InventoryResponse> adjustInventory(@PathVariable UUID productId,
                                                              @Valid @RequestBody AdjustInventoryRequest request) {
         return ResponseEntity.ok(inventoryService.adjustStock(productId, request));

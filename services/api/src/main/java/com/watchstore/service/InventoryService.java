@@ -37,8 +37,9 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<InventoryResponse> listAll() {
+    public List<InventoryResponse> listAll(Boolean lowStockOnly) {
         return inventoryRepository.findAll().stream()
+                .filter(inventory -> lowStockOnly == null || !lowStockOnly || inventory.getQuantityAvailable() <= 5)
                 .map(this::toResponse)
                 .toList();
     }

@@ -9,4 +9,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpecificationExecutor<Product> {
 
     Optional<Product> findBySlug(String slug);
+
+    long countByBrand_Id(UUID brandId);
+
+    long countByCategory_Id(UUID categoryId);
 }
