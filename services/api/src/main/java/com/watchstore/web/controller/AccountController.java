@@ -4,9 +4,10 @@ import com.watchstore.security.SecurityUtils;
 import com.watchstore.service.AuthService;
 import com.watchstore.service.WishlistService;
 import com.watchstore.web.dto.ProductResponse;
+import com.watchstore.web.dto.UpdateProfileRequest;
 import com.watchstore.web.dto.UserProfileResponse;
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,11 +34,11 @@ public class AccountController {
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<UserProfileResponse> updateProfile(@RequestBody Map<String, @NotBlank String> body) {
+    public ResponseEntity<UserProfileResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(authService.updateProfile(
                 SecurityUtils.requireCurrentUserId(),
-                body.get("firstName"),
-                body.get("lastName")));
+                request.firstName(),
+                request.lastName()));
     }
 
     @GetMapping("/wishlist")
