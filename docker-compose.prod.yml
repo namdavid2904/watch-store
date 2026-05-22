@@ -1,0 +1,12 @@
+# Production overlay — use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+services:
+  api:
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    restart: unless-stopped
+
+  web:
+    restart: unless-stopped
+
+  admin:
+    restart: unless-stopped
