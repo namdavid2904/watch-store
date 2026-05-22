@@ -10,6 +10,10 @@ processors:
   batch:
 
 exporters:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
   logging:
     loglevel: info
 
@@ -18,4 +22,4 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging]
+      exporters: [otlp/jaeger, logging]
