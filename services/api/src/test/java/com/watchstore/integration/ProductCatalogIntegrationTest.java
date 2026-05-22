@@ -44,4 +44,60 @@ class ProductCatalogIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(3));
     }
+
+    @Test
+    void filterProductsByBrandAndPriceRange() throws Exception {
+        mockMvc.perform(get("/api/v1/products")
+                        .param("brandId", "a1000000-0000-4000-8000-000000000001")
+                        .param("minPrice", "5000")
+                        .param("maxPrice", "11000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(greaterThanOrEqualTo(3)))
+                .andExpect(jsonPath("$.content[0].brandName").value("Rolex"));
+    }
+
+    @Test
+    void fullTextSearchFindsSeededProduct() throws Exception {
+        mockMvc.perform(get("/api/v1/products").param("search", "submariner"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.content[0].slug").value("rolex-submariner-date"));
+    }
+
+    @Test
+    void listBrandsAndCategories() throws Exception {
+        mockMvc.perform(get("/api/v1/brands"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(6)));
+
+        mockMvc.perform(get("/api/v1/categories"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(4)));
+    }
+
+    @Test
+    void repeatedCatalogRequestsStayFastWhenCached() throws Exception {
+        long firstDurationMs = timedCatalogRequest();
+        long secondDurationMs = timedCatalogRequest();
+
+        mockMvc.perform(get("/api/v1/products")
+                        .param("movementType", "AUTOMATIC")
+                        .param("sort", "price,asc"))
+                .andExpect(status().isOk());
+
+        org.assertj.core.api.Assertions.assertThat(secondDurationMs)
+                .isLessThanOrEqualTo(Math.max(firstDurationMs, 1L));
+        org.assertj.core.api.Assertions.assertThat(secondDurationMs)
+                .isLessThan(100L);
+    }
+
+    private long timedCatalogRequest() throws Exception {
+        long start = System.nanoTime();
+        mockMvc.perform(get("/api/v1/products")
+                        .param("movementType", "AUTOMATIC")
+                        .param("sort", "price,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(greaterThanOrEqualTo(1)));
+        return (System.nanoTime() - start) / 1_000_000;
+    }
 }
