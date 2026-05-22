@@ -4,19 +4,21 @@ import com.watchstore.domain.entity.RefreshToken;
 import com.watchstore.domain.entity.User;
 import com.watchstore.domain.enums.Role;
 import com.watchstore.exception.ApiException;
+import com.watchstore.infrastructure.redis.RefreshTokenStore;
 import com.watchstore.repository.RefreshTokenRepository;
 import com.watchstore.repository.UserRepository;
 import com.watchstore.security.JwtTokenProvider;
 import com.watchstore.web.dto.AuthLoginRequest;
 import com.watchstore.web.dto.AuthRegisterRequest;
 import com.watchstore.web.dto.AuthResponse;
-import com.watchstore.web.dto.TokenRefreshRequest;
+import com.watchstore.web.dto.PatchProfileRequest;
 import com.watchstore.web.dto.UserProfileResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,6 +32,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenStore refreshTokenStore;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -63,24 +66,30 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse refresh(TokenRefreshRequest request) {
-        String tokenHash = hashToken(request.refreshToken());
+    public AuthResponse refresh(String refreshTokenValue) {
+        String tokenHash = hashToken(refreshTokenValue);
+
+        if (!refreshTokenStore.exists(tokenHash)) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+        }
+
         RefreshToken stored = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid refresh token"));
 
         if (stored.getExpiresAt().isBefore(Instant.now())) {
-            refreshTokenRepository.delete(stored);
+            revokeRefreshToken(tokenHash, stored.getUser().getId());
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
         }
 
         User user = stored.getUser();
-        refreshTokenRepository.delete(stored);
+        revokeRefreshToken(tokenHash, user.getId());
         return issueTokensForUser(user);
     }
 
     @Transactional
     public void logout(UUID userId) {
         refreshTokenRepository.deleteByUser_Id(userId);
+        refreshTokenStore.revokeAllForUser(userId);
     }
 
     @Transactional(readOnly = true)
@@ -100,17 +109,43 @@ public class AuthService {
     }
 
     @Transactional
+    public UserProfileResponse patchProfile(UUID userId, PatchProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (request.firstName() != null) {
+            user.setFirstName(request.firstName());
+        }
+        if (request.lastName() != null) {
+            user.setLastName(request.lastName());
+        }
+        if (request.shippingAddress() != null) {
+            user.setShippingAddress(request.shippingAddress());
+        }
+
+        return toProfileResponse(user);
+    }
+
+    @Transactional
     public AuthResponse issueTokensForUser(User user) {
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail(), user.getRole());
         String refreshTokenValue = jwtTokenProvider.generateRefreshTokenValue();
+        String tokenHash = hashToken(refreshTokenValue);
+        long refreshTtlMs = jwtTokenProvider.getRefreshTokenExpirationMs();
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
-        refreshToken.setTokenHash(hashToken(refreshTokenValue));
-        refreshToken.setExpiresAt(Instant.now().plusMillis(jwtTokenProvider.getRefreshTokenExpirationMs()));
+        refreshToken.setTokenHash(tokenHash);
+        refreshToken.setExpiresAt(Instant.now().plusMillis(refreshTtlMs));
         refreshTokenRepository.save(refreshToken);
+        refreshTokenStore.store(user.getId(), tokenHash, refreshTtlMs);
 
         return new AuthResponse(accessToken, refreshTokenValue, user.getId(), user.getEmail(), user.getRole());
+    }
+
+    private void revokeRefreshToken(String tokenHash, UUID userId) {
+        refreshTokenRepository.findByTokenHash(tokenHash).ifPresent(refreshTokenRepository::delete);
+        refreshTokenStore.revoke(tokenHash);
     }
 
     private UserProfileResponse toProfileResponse(User user) {
@@ -120,6 +155,7 @@ public class AuthService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getRole(),
+                user.getShippingAddress(),
                 user.getCreatedAt()
         );
     }

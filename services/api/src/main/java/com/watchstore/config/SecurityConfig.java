@@ -35,7 +35,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/ping",
-                                "/api/v1/auth/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/api/v1/enquiries",
@@ -45,6 +44,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        .requestMatchers("/api/v1/auth/logout").authenticated()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/products/**", "/api/v1/brands/**", "/api/v1/categories/**").permitAll()
                         .requestMatchers("/api/v1/cart/**").permitAll()
                         .requestMatchers("/api/v1/checkout/initiate").permitAll()
