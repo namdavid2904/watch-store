@@ -19,7 +19,8 @@ Production-grade watch e-commerce platform built as a pnpm monorepo.
 # Start infrastructure + services
 make up
 
-# Customer app:  http://localhost:3000
+# Customer app (Docker):  http://localhost:3003
+# Customer app (local):   http://localhost:3000  (pnpm dev:web)
 # Admin app:     http://localhost:3002
 # API / Swagger: http://localhost:8080/swagger-ui.html
 # Grafana:       http://localhost:3001  (admin / admin)

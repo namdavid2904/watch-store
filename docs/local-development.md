@@ -14,7 +14,8 @@ make up
 
 | Service    | URL                                      |
 |------------|------------------------------------------|
-| Customer   | http://localhost:3000                    |
+| Customer   | http://localhost:3003 (Docker default)   |
+| Customer   | http://localhost:3000 (`pnpm dev:web`)   |
 | Admin      | http://localhost:3002                    |
 | API        | http://localhost:8080                    |
 | Swagger UI | http://localhost:8080/swagger-ui.html    |

@@ -52,7 +52,7 @@ services:
       REDIS_PORT: 6379
       S3_ENDPOINT: http://localstack:4566
       JWT_SECRET: dev-secret-key-change-in-production-min-256-bits
-      CORS_ORIGINS: http://localhost:3000,http://localhost:3002
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3002,http://localhost:3003
     depends_on:
       postgres:
         condition: service_healthy
@@ -70,7 +70,7 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     ports:
-      - "3000:3000"
+      - "${WEB_HOST_PORT:-3003}:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8080
     depends_on:
