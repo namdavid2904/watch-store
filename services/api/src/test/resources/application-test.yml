@@ -1,0 +1,24 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    secret: test-secret-key-for-integration-tests-min-256-bits-long-enough
+  cors:
+    allowed-origins: http://localhost:3000
+  s3:
+    bucket: watch-store-test
+    endpoint: http://localhost:4566
+    region: us-east-1
+  stripe:
+    enabled: false
+
+logging:
+  level:
+    com.watchstore: INFO
+    org.springframework.security: WARN
