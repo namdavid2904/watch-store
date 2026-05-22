@@ -161,6 +161,62 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Product"
+  /api/v1/cart:
+    get:
+      tags: [Cart]
+      summary: Get current cart
+      parameters:
+        - in: header
+          name: X-Cart-Session-Id
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cart contents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+    delete:
+      tags: [Cart]
+      summary: Clear cart
+      responses:
+        "200":
+          description: Cleared cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+  /api/v1/cart/items:
+    post:
+      tags: [Cart]
+      summary: Add item to cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddCartItemRequest"
+      responses:
+        "200":
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+  /api/v1/cart/merge:
+    post:
+      tags: [Cart]
+      summary: Merge guest cart into authenticated user cart
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Merged cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
 components:
   securitySchemes:
     bearerAuth:
@@ -294,3 +350,47 @@ components:
           type: string
         quantityAvailable:
           type: integer
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+        itemCount:
+          type: integer
+        subtotal:
+          type: number
+        warnings:
+          type: array
+          items:
+            type: string
+    CartItem:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        productSlug:
+          type: string
+        unitPrice:
+          type: number
+        imageUrl:
+          type: string
+          nullable: true
+        quantity:
+          type: integer
+        lineTotal:
+          type: number
+    AddCartItemRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
