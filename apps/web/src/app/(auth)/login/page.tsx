@@ -2,13 +2,15 @@
 
 import { Button, Input } from "@watch-store/ui";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 
-export default function LoginPage() {
+function LoginForm() {
   const { login, client } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") ?? "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(email, password);
-      router.push("/");
+      router.push(nextPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -57,5 +59,13 @@ export default function LoginPage() {
         </p>
       </div>
     </section>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<p className="text-muted-foreground text-center">Loading sign in...</p>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -77,9 +77,15 @@ export default function CartPage() {
         ))}
       </div>
 
-      <div className="flex items-center justify-between border-t pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-4">
         <span className="text-lg font-semibold">Subtotal</span>
         <span className="text-lg font-semibold">{formatPrice(cart.subtotal)}</span>
+      </div>
+
+      <div className="flex justify-end">
+        <Button asChild>
+          <Link href="/checkout">Proceed to checkout</Link>
+        </Button>
       </div>
     </section>
   );
