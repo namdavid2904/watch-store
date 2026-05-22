@@ -38,10 +38,8 @@ public class ProductSpecificationBuilder {
                 predicates.add(cb.equal(cb.lower(root.get("color")), filter.color().toLowerCase()));
             }
             if (StringUtils.hasText(filter.search())) {
-                String pattern = "%" + filter.search().toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("name")), pattern),
-                        cb.like(cb.lower(root.get("description")), pattern)
+                predicates.add(cb.isTrue(
+                        cb.function("fts", Boolean.class, root.get("searchVector"), cb.literal(filter.search()))
                 ));
             }
 

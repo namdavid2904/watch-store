@@ -6,6 +6,8 @@ import com.watchstore.web.dto.PageResponse;
 import com.watchstore.web.dto.ProductFilterRequest;
 import com.watchstore.web.dto.ProductResponse;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +19,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class CatalogSearchService {
+
+    private static final Map<String, String> SORT_FIELDS = Map.of(
+            "price", "price",
+            "name", "name",
+            "createdAt", "createdAt",
+            "newest", "createdAt"
+    );
+
+    private static final Set<String> ALLOWED_DIRECTIONS = Set.of("asc", "desc");
 
     private final ProductRepository productRepository;
     private final ProductSpecificationBuilder specificationBuilder;
@@ -38,9 +49,16 @@ public class CatalogSearchService {
 
     private Sort parseSort(String sort) {
         String[] parts = sort.split(",");
-        if (parts.length == 2) {
-            return Sort.by(Sort.Direction.fromString(parts[1]), parts[0]);
+        String requestedField = parts[0].trim();
+        String property = SORT_FIELDS.getOrDefault(requestedField, "createdAt");
+
+        Sort.Direction direction = Sort.Direction.DESC;
+        if (parts.length == 2 && ALLOWED_DIRECTIONS.contains(parts[1].trim().toLowerCase())) {
+            direction = Sort.Direction.fromString(parts[1].trim());
+        } else if ("price".equals(requestedField) || "name".equals(requestedField)) {
+            direction = Sort.Direction.ASC;
         }
-        return Sort.by(Sort.Direction.DESC, "createdAt");
+
+        return Sort.by(direction, property);
     }
 }
