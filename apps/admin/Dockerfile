@@ -11,7 +11,7 @@ RUN pnpm install --frozen-lockfile || pnpm install
 FROM node:22-alpine AS builder
 WORKDIR /app
 RUN corepack enable pnpm
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/ ./
 COPY . .
 RUN pnpm --filter @watch-store/admin build
 

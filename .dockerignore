@@ -1,0 +1,26 @@
+# Dependencies and build outputs are installed/built inside Docker
+**/node_modules
+**/.next
+**/dist
+**/target
+**/.turbo
+
+# Version control and editor files
+.git
+.gitignore
+.cursor
+.vscode
+.idea
+
+# Backend and infra are built from separate contexts
+services/
+infra/
+
+# Local secrets and logs
+.env*
+*.log
+coverage
+
+# Docs and tooling not needed in runtime images
+*.md
+Makefile
