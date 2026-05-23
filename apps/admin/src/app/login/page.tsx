@@ -43,8 +43,7 @@ function AdminLoginForm() {
     try {
       const response = await client.login({ email, password });
       setAuthSession(response);
-      const profile = await client.getProfile();
-      if (profile.role !== "ADMIN") {
+      if (response.role !== "ADMIN") {
         clearAdminSessionCookie();
         await client.logout();
         setError("This account does not have admin access.");

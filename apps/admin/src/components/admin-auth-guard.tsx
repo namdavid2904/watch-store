@@ -1,6 +1,11 @@
 "use client";
 
-import { createAuthClient, clearAuthSession, getAuthSession } from "@watch-store/auth";
+import {
+  createAuthClient,
+  clearAuthSession,
+  getAccessToken,
+  getAuthSession,
+} from "@watch-store/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -13,6 +18,28 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function verifyAdmin() {
+      async function confirmAdminAccess(): Promise<boolean> {
+        const profile = await client.getProfile();
+        if (profile.role !== "ADMIN") {
+          clearAuthSession();
+          router.replace("/login?error=Access%20denied");
+          return false;
+        }
+        setReady(true);
+        return true;
+      }
+
+      const session = getAuthSession();
+      if (session?.role === "ADMIN" && getAccessToken()) {
+        try {
+          if (await confirmAdminAccess()) {
+            return;
+          }
+        } catch {
+          clearAuthSession();
+        }
+      }
+
       const refreshed = await client.refresh();
       if (!refreshed) {
         router.replace("/login");
@@ -20,13 +47,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const profile = await client.getProfile();
-        if (profile.role !== "ADMIN") {
-          clearAuthSession();
-          router.replace("/login?error=Access%20denied");
-          return;
-        }
-        setReady(true);
+        await confirmAdminAccess();
       } catch {
         clearAuthSession();
         router.replace("/login");
