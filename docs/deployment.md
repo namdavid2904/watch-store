@@ -96,7 +96,11 @@ REFRESH_COOKIE_SAME_SITE=None
 S3_BUCKET, AWS_REGION
 AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET  (if using Google login)
+STRIPE_ENABLED=true
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
+
 
 ### Render
 
@@ -138,9 +142,56 @@ In Google Cloud Console, add authorized redirect URI:
 
 `https://api.yourdomain.com/login/oauth2/code/google`
 
-### Stripe (when enabled)
+### Stripe Test Mode
 
-Webhook URL: `https://api.yourdomain.com/api/v1/webhooks/stripe`
+Enable Stripe Test Mode for checkout without real charges. Use **test** keys only (`sk_test_...`, `pk_test_...`, `whsec_...`).
+
+#### API (Render / Docker host)
+
+| Variable | Example | Notes |
+|----------|---------|-------|
+| `STRIPE_ENABLED` | `true` | Enables real Stripe SDK gateway (`app.stripe.enabled`) |
+| `STRIPE_SECRET_KEY` | `sk_test_...` | Stripe Dashboard → Developers → API keys |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_...` | From Stripe Dashboard webhook endpoint or Stripe CLI |
+
+**Webhook URL (production API):**
+
+`https://watch-store-ixei.onrender.com/api/v1/webhooks/stripe`
+
+In Stripe Dashboard → Developers → Webhooks, subscribe to:
+
+- `payment_intent.succeeded`
+- `payment_intent.payment_failed`
+
+#### Customer web (Vercel)
+
+| Variable | Example |
+|----------|---------|
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_...` |
+
+Redeploy Vercel after setting `NEXT_PUBLIC_*` variables.
+
+#### Local development with Stripe CLI
+
+1. Install [Stripe CLI](https://stripe.com/docs/stripe-cli).
+2. Log in: `stripe login`
+3. Forward webhooks to the local API:
+
+```bash
+stripe listen --forward-to localhost:8080/api/v1/webhooks/stripe
+```
+
+4. Copy the `whsec_...` signing secret printed by the CLI into `.env` as `STRIPE_WEBHOOK_SECRET`.
+5. Set `STRIPE_ENABLED=true`, `STRIPE_SECRET_KEY=sk_test_...`, and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...` in `.env`.
+6. Run checkout on the web app and pay with test card **4242 4242 4242 4242** (any future expiry, any CVC).
+
+#### Order status flow
+
+1. `POST /checkout/confirm` creates order `PENDING_PAYMENT` and returns `paymentClientSecret`.
+2. Client confirms payment via Stripe.js Payment Element.
+3. Stripe webhook updates order to `PAID` or `FAILED`.
+
+Verify webhook deliveries in Stripe Dashboard → Developers → Webhooks → event log after a test purchase.
 
 ---
 
@@ -208,6 +259,8 @@ Connect Git integration; production branch `main`. Preview deployments optional.
 - [ ] S3 bucket and credentials working
 - [ ] `NEXT_PUBLIC_API_URL` on both Vercel projects
 - [ ] Google OAuth URIs updated
+- [ ] Stripe Test Mode keys on API (`STRIPE_*`) and web (`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`)
+- [ ] Stripe webhook endpoint verified (`payment_intent.succeeded` / `payment_intent.payment_failed`)
 - [ ] Health + login + cart smoke test
 
 ---
