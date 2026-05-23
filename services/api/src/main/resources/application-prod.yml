@@ -5,11 +5,21 @@ spring:
     show-sql: false
   flyway:
     locations: classpath:db/migration
+  data:
+    redis:
+      # Set REDIS_URL on Render to full Upstash URL (rediss://...), OR use REDIS_HOST + REDIS_PASSWORD + REDIS_SSL_ENABLED.
+      url: ${REDIS_URL:#{null}}
 
 management:
   tracing:
-    sampling:
-      probability: 1.0
+    enabled: false
+  otlp:
+    tracing:
+      export:
+        enabled: false
+  health:
+    redis:
+      enabled: false
 
 logging:
   level:

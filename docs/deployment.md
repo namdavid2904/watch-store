@@ -100,7 +100,19 @@ GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET  (if using Google login)
 
 ### Render
 
-Example blueprint: [`infra/deploy/render.yaml`](../infra/deploy/render.yaml). Create a **Web Service → Docker**, point to `services/api/Dockerfile`, health check `/actuator/health`, attach env vars from Phase 2.
+Example blueprint: [`infra/deploy/render.yaml`](../infra/deploy/render.yaml). Create a **Web Service → Docker**, health check **`/api/v1/ping`** (not `/actuator/health` — that endpoint includes Redis and will fail if Redis env is wrong), attach env vars from Phase 2.
+
+**Docker settings (required)** — use **one** of these; wrong context causes `"/src": not found` and build context ~2B:
+
+| Field | Option A (repo root) | Option B (API folder) |
+|-------|----------------------|------------------------|
+| Root Directory | *(empty)* | `services/api` |
+| Dockerfile Path | `services/api/Dockerfile` | `Dockerfile` |
+| Docker Context / Context Directory | `services/api` | `.` |
+
+Do **not** use repo root (`.`) as Docker context: the root [`.dockerignore`](../.dockerignore) excludes `services/`, so the API `COPY` steps fail on Render.
+
+If build logs show `transferring context: 2B` or `checkstyle.xml not found`, fix the table above and redeploy.
 
 ### Fly.io
 

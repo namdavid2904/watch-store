@@ -7,7 +7,7 @@ services:
     runtime: docker
     dockerfilePath: ./services/api/Dockerfile
     dockerContext: ./services/api
-    healthCheckPath: /actuator/health
+    healthCheckPath: /api/v1/ping
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
