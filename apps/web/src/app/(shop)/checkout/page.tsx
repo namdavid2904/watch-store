@@ -5,10 +5,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button, Input } from "@watch-store/ui";
 import { useAuth } from "@/components/auth-provider";
+import { StripePaymentForm } from "@/components/stripe-payment-form";
 import { useCheckout } from "@/hooks/use-checkout";
 import { formatPrice } from "@/lib/catalog";
 
 type Step = "shipping" | "review" | "payment";
+
+type ConfirmedOrder = {
+  orderId: string;
+  clientSecret: string;
+};
 
 const initialAddress = {
   line1: "",
@@ -26,6 +32,7 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<Step>("shipping");
   const [address, setAddress] = useState(initialAddress);
   const [error, setError] = useState<string | null>(null);
+  const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -53,13 +60,22 @@ export default function CheckoutPage() {
     if (!checkout) {
       return;
     }
+
     setError(null);
     try {
       const result = await confirm.mutateAsync({
         checkoutId: checkout.checkoutId,
         shippingAddress: address,
       });
-      router.push(`/checkout/confirmation/${result.orderId}`);
+
+      if (!result.paymentClientSecret) {
+        throw new Error("Payment could not be initialized");
+      }
+
+      setConfirmedOrder({
+        orderId: result.orderId,
+        clientSecret: result.paymentClientSecret,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to confirm checkout");
     }
@@ -171,20 +187,29 @@ export default function CheckoutPage() {
       {step === "payment" && checkout ? (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Payment</h2>
-          <div className="border-border rounded-lg border border-dashed p-6 text-center">
-            <p className="font-medium">Stripe Elements placeholder</p>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Payment UI will be wired in a later phase. Confirming now creates your order in pending payment status.
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Button onClick={() => void handleConfirmOrder()} disabled={confirm.isPending}>
-              {confirm.isPending ? "Placing order..." : "Place order"}
-            </Button>
-            <Button variant="outline" onClick={() => setStep("review")}>
-              Back
-            </Button>
-          </div>
+          {confirmedOrder ? (
+            <div className="border-border rounded-lg border p-4">
+              <StripePaymentForm
+                clientSecret={confirmedOrder.clientSecret}
+                onError={(message) => setError(message)}
+                onSuccess={() => router.push(`/checkout/confirmation/${confirmedOrder.orderId}`)}
+              />
+            </div>
+          ) : (
+            <>
+              <p className="text-muted-foreground text-sm">
+                Confirm your order to create it in pending payment status, then complete payment securely with Stripe.
+              </p>
+              <div className="flex gap-3">
+                <Button onClick={() => void handleConfirmOrder()} disabled={confirm.isPending}>
+                  {confirm.isPending ? "Creating order..." : "Confirm order"}
+                </Button>
+                <Button variant="outline" onClick={() => setStep("review")}>
+                  Back
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       ) : null}
     </section>
