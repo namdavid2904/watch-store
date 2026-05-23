@@ -45,6 +45,13 @@ public class ObservabilityConfig {
     }
 
     @Bean
+    public Counter stripeWebhookEventsTotal(MeterRegistry registry) {
+        return Counter.builder("stripe_webhook_events_total")
+                .description("Total Stripe webhook events processed successfully")
+                .register(registry);
+    }
+
+    @Bean
     public Gauge catalogCacheHitRatio(MeterRegistry registry,
                                       Counter catalogCacheHits,
                                       Counter catalogCacheMisses) {

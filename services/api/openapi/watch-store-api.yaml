@@ -237,6 +237,10 @@ paths:
     post:
       tags: [Checkout]
       summary: Confirm checkout and create order
+      description: |
+        Creates an order in `PENDING_PAYMENT`, reserves inventory, and returns a Stripe
+        PaymentIntent client secret for client-side confirmation via Stripe.js.
+        Final order status (`PAID` or `FAILED`) is set asynchronously by the Stripe webhook.
       security:
         - bearerAuth: []
       requestBody:
@@ -247,11 +251,50 @@ paths:
               $ref: "#/components/schemas/CheckoutConfirmRequest"
       responses:
         "200":
-          description: Order created
+          description: Order created; complete payment with paymentClientSecret on the client
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckoutConfirmResponse"
+  /api/v1/webhooks/stripe:
+    post:
+      tags: [Payments]
+      summary: Stripe webhook receiver
+      description: |
+        Receives signed Stripe webhook events. Requires the raw request body and
+        `Stripe-Signature` header when Stripe is enabled. Events are processed
+        idempotently by Stripe event ID.
+
+        Handled event types:
+        - `payment_intent.succeeded` → order status `PAID`
+        - `payment_intent.payment_failed` → order status `FAILED`
+      parameters:
+        - in: header
+          name: Stripe-Signature
+          required: true
+          schema:
+            type: string
+          description: HMAC signature from Stripe (`whsec_...` secret)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Raw Stripe Event JSON payload
+      responses:
+        "200":
+          description: Event accepted (including duplicate event IDs)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: received
+        "400":
+          description: Missing or invalid Stripe signature
   /api/v1/orders:
     get:
       tags: [Orders]
@@ -516,6 +559,7 @@ components:
           type: string
         paymentClientSecret:
           type: string
+          description: Stripe PaymentIntent client secret for Stripe.js confirmPayment
     Order:
       type: object
       properties:

@@ -2,6 +2,7 @@ package com.watchstore.web.controller;
 
 import com.watchstore.exception.ApiException;
 import com.watchstore.infrastructure.stripe.PaymentGateway;
+import io.micrometer.core.instrument.Counter;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class StripeWebhookController {
 
     private final PaymentGateway paymentGateway;
+    private final Counter stripeWebhookEventsTotal;
 
     @PostMapping
     public ResponseEntity<Map<String, String>> handleWebhook(
@@ -24,6 +26,7 @@ public class StripeWebhookController {
             @RequestHeader(value = "Stripe-Signature", required = false) String signature) {
         try {
             paymentGateway.processWebhook(payload, signature);
+            stripeWebhookEventsTotal.increment();
             return ResponseEntity.ok(Map.of("status", "received"));
         } catch (ApiException exception) {
             if (exception.getStatus().is4xxClientError()) {
