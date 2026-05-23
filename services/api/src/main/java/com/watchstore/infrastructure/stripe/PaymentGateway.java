@@ -12,7 +12,5 @@ public interface PaymentGateway {
             String currency,
             Map<String, String> metadata);
 
-    boolean verifyWebhookSignature(String payload, String signature);
-
-    void handlePaymentSucceeded(String paymentIntentId);
+    void processWebhook(String payload, String signature);
 }

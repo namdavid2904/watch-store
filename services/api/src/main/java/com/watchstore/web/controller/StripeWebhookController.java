@@ -1,7 +1,6 @@
 package com.watchstore.web.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.watchstore.exception.ApiException;
 import com.watchstore.infrastructure.stripe.PaymentGateway;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -18,29 +17,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class StripeWebhookController {
 
     private final PaymentGateway paymentGateway;
-    private final ObjectMapper objectMapper;
 
     @PostMapping
     public ResponseEntity<Map<String, String>> handleWebhook(
             @RequestBody String payload,
             @RequestHeader(value = "Stripe-Signature", required = false) String signature) {
-        if (!paymentGateway.verifyWebhookSignature(payload, signature)) {
-            return ResponseEntity.badRequest().body(Map.of("status", "invalid_signature"));
-        }
-
         try {
-            JsonNode root = objectMapper.readTree(payload);
-            String eventType = root.path("type").asText();
-            if ("payment_intent.succeeded".equals(eventType)) {
-                String paymentIntentId = root.path("data").path("object").path("id").asText(null);
-                if (paymentIntentId != null && !paymentIntentId.isBlank()) {
-                    paymentGateway.handlePaymentSucceeded(paymentIntentId);
-                }
+            paymentGateway.processWebhook(payload, signature);
+            return ResponseEntity.ok(Map.of("status", "received"));
+        } catch (ApiException exception) {
+            if (exception.getStatus().is4xxClientError()) {
+                return ResponseEntity.status(exception.getStatus())
+                        .body(Map.of("status", exception.getMessage()));
             }
-        } catch (Exception ignored) {
-            // Stub webhook accepts minimal payloads during development.
+            throw exception;
         }
-
-        return ResponseEntity.ok(Map.of("status", "received"));
     }
 }

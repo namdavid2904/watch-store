@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.watchstore.domain.entity.Inventory;
 import com.watchstore.repository.InventoryRepository;
 import com.watchstore.repository.OrderRepository;
+import com.watchstore.repository.StripeWebhookEventRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -46,10 +47,14 @@ class CheckoutIntegrationTest extends AbstractIntegrationTest {
     private OrderRepository orderRepository;
 
     @Autowired
+    private StripeWebhookEventRepository stripeWebhookEventRepository;
+
+    @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
     @BeforeEach
     void resetCheckoutState() {
+        stripeWebhookEventRepository.deleteAll();
         Inventory inventory = inventoryRepository.findById(UUID.fromString(SUBMARINER_ID)).orElseThrow();
         inventory.setQuantityAvailable(3);
         inventory.setQuantityReserved(0);
@@ -195,9 +200,11 @@ class CheckoutIntegrationTest extends AbstractIntegrationTest {
         String orderId = confirmBody.get("orderId").asText();
 
         mockMvc.perform(post("/api/v1/webhooks/stripe")
+                        .header("Stripe-Signature", "test_signature")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "id":"evt_test_paid_1",
                                   "type":"payment_intent.succeeded",
                                   "data":{"object":{"id":"%s"}}
                                 }
@@ -207,6 +214,70 @@ class CheckoutIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/v1/orders/" + orderId).header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PAID"));
+    }
+
+    @Test
+    void stripeWebhookIgnoresDuplicateEvents() throws Exception {
+        String accessToken = loginAsCustomer();
+        String sessionId = "webhook-duplicate-session";
+
+        mockMvc.perform(post("/api/v1/cart/items")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"productId":"%s","quantity":1}
+                                """.formatted(SUBMARINER_ID)))
+                .andExpect(status().isOk());
+
+        MvcResult initiateResult = mockMvc.perform(post("/api/v1/checkout/initiate")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String checkoutId = objectMapper.readTree(initiateResult.getResponse().getContentAsString())
+                .get("checkoutId")
+                .asText();
+
+        MvcResult confirmResult = mockMvc.perform(post("/api/v1/checkout/confirm")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "checkoutId":"%s",
+                                  "shippingAddress": {"line1":"1 Test Way","city":"Boston","postalCode":"02108","country":"US"}
+                                }
+                                """.formatted(checkoutId)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode confirmBody = objectMapper.readTree(confirmResult.getResponse().getContentAsString());
+        String paymentIntentId = confirmBody.get("paymentIntentId").asText();
+        String orderId = confirmBody.get("orderId").asText();
+        String webhookPayload = """
+                {
+                  "id":"evt_test_duplicate",
+                  "type":"payment_intent.succeeded",
+                  "data":{"object":{"id":"%s"}}
+                }
+                """.formatted(paymentIntentId);
+
+        mockMvc.perform(post("/api/v1/webhooks/stripe")
+                        .header("Stripe-Signature", "test_signature")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(webhookPayload))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/webhooks/stripe")
+                        .header("Stripe-Signature", "test_signature")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(webhookPayload))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PAID"));
+
+        assertThat(stripeWebhookEventRepository.count()).isEqualTo(1);
     }
 
     private int initiateCheckout(String sessionId) throws Exception {
