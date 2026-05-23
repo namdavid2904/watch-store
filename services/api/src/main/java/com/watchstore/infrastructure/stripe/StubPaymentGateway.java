@@ -1,6 +1,7 @@
 package com.watchstore.infrastructure.stripe;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,7 +15,11 @@ public class StubPaymentGateway implements PaymentGateway {
     private final PaymentWebhookHandler paymentWebhookHandler;
 
     @Override
-    public PaymentIntentResult createPaymentIntent(UUID orderId, BigDecimal amount, String currency) {
+    public PaymentIntentResult createPaymentIntent(
+            UUID orderId,
+            BigDecimal amount,
+            String currency,
+            Map<String, String> metadata) {
         String paymentIntentId = "pi_stub_" + orderId;
         return new PaymentIntentResult(paymentIntentId, "cs_stub_" + orderId);
     }

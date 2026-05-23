@@ -147,7 +147,13 @@ public class CheckoutService {
             order.setTotalAmount(total);
             orderRepository.save(order);
 
-            PaymentIntentResult paymentIntent = paymentGateway.createPaymentIntent(order.getId(), total, "USD");
+            PaymentIntentResult paymentIntent = paymentGateway.createPaymentIntent(
+                    order.getId(),
+                    total,
+                    "USD",
+                    Map.of(
+                            "orderId", order.getId().toString(),
+                            "checkoutId", request.checkoutId().toString()));
             order.setPaymentIntentId(paymentIntent.paymentIntentId());
             orderRepository.save(order);
 

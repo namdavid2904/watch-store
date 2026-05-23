@@ -6,6 +6,7 @@ import com.stripe.param.PaymentIntentCreateParams;
 import com.watchstore.exception.ApiException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,11 @@ public class StripePaymentGateway implements PaymentGateway {
     private final PaymentWebhookHandler paymentWebhookHandler;
 
     @Override
-    public PaymentIntentResult createPaymentIntent(UUID orderId, BigDecimal amount, String currency) {
+    public PaymentIntentResult createPaymentIntent(
+            UUID orderId,
+            BigDecimal amount,
+            String currency,
+            Map<String, String> metadata) {
         long amountCents = toAmountInCents(amount);
         String normalizedCurrency = currency == null ? "usd" : currency.toLowerCase();
 
@@ -35,6 +40,14 @@ public class StripePaymentGateway implements PaymentGateway {
                         PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
                                 .setEnabled(true)
                                 .build());
+
+        if (metadata != null) {
+            metadata.forEach((key, value) -> {
+                if (StringUtils.hasText(key) && value != null) {
+                    paramsBuilder.putMetadata(key, value);
+                }
+            });
+        }
 
         try {
             PaymentIntent paymentIntent = PaymentIntent.create(paramsBuilder.build());
