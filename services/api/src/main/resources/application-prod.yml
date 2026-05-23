@@ -29,6 +29,10 @@ logging:
 app:
   s3:
     endpoint: ${S3_ENDPOINT:}
+  stripe:
+    enabled: ${STRIPE_ENABLED:true}
+    secret-key: ${STRIPE_SECRET_KEY}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET}
   auth:
     refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:true}
     refresh-cookie-same-site: ${REFRESH_COOKIE_SAME_SITE:None}

@@ -23,6 +23,7 @@
         <mapstruct.version>1.6.2</mapstruct.version>
         <jjwt.version>0.12.6</jjwt.version>
         <testcontainers.version>1.21.4</testcontainers.version>
+        <stripe.version>28.4.0</stripe.version>
     </properties>
 
     <dependencies>
@@ -121,6 +122,11 @@
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j_jdk17-core</artifactId>
             <version>8.14.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>${stripe.version}</version>
         </dependency>
         <dependency>
             <groupId>net.logstash.logback</groupId>
