@@ -55,6 +55,17 @@ export default function ProductsPage() {
     },
   });
 
+  const uploadGalleryImage = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => client.uploadProductGalleryImage(id, file),
+    onSuccess: () => {
+      setUploadError(null);
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError: (err) => {
+      setUploadError(err instanceof Error ? err.message : "Gallery upload failed");
+    },
+  });
+
   const selected = productsQuery.data?.content.find((product) => product.id === selectedId) ?? null;
   const isLoading = productsQuery.isLoading || brandsQuery.isLoading || categoriesQuery.isLoading;
 
@@ -145,6 +156,21 @@ export default function ProductsPage() {
                           />
                           {product.model3dUrl ? (
                             <Badge variant="accent">3D</Badge>
+                          ) : null}
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            className="max-w-44"
+                            disabled={uploadGalleryImage.isPending}
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (file) {
+                                uploadGalleryImage.mutate({ id: product.id, file });
+                              }
+                            }}
+                          />
+                          {(product.galleryImages?.length ?? 0) > 0 ? (
+                            <Badge variant="outline">{product.galleryImages?.length} angles</Badge>
                           ) : null}
                           <Button
                             size="sm"
