@@ -9,7 +9,7 @@ export function parseCaseDiameterMm(caseDimension: string | null | undefined): n
   }
 
   const mmMatch = caseDimension.match(/(\d+(?:\.\d+)?)\s*mm/i);
-  if (mmMatch) {
+  if (mmMatch?.[1]) {
     return Number.parseFloat(mmMatch[1]);
   }
 

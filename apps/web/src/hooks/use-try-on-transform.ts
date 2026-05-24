@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type TryOnTransform = {
   x: number;
@@ -33,7 +33,10 @@ function isSettled(current: TryOnTransform, target: TryOnTransform): boolean {
 }
 
 export function useTryOnTransform(initial?: Partial<TryOnTransform>) {
-  const initialTransform = { ...DEFAULT_TRANSFORM, ...initial };
+  const initialTransform = useMemo(
+    () => ({ ...DEFAULT_TRANSFORM, ...initial }),
+    [initial?.x, initial?.y, initial?.scale, initial?.rotation]
+  );
   const targetRef = useRef<TryOnTransform>(initialTransform);
   const [transform, setTransform] = useState<TryOnTransform>(initialTransform);
 
