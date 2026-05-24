@@ -6,6 +6,7 @@ import com.watchstore.domain.entity.EnquiryTag;
 import com.watchstore.domain.entity.Product;
 import com.watchstore.domain.entity.User;
 import com.watchstore.domain.enums.EnquiryStatus;
+import com.watchstore.domain.event.EnquirySubmittedEvent;
 import com.watchstore.exception.ResourceNotFoundException;
 import com.watchstore.repository.EnquiryReplyRepository;
 import com.watchstore.repository.EnquiryRepository;
@@ -19,6 +20,7 @@ import com.watchstore.web.dto.EnquiryRequest;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class EnquiryService {
     private final EnquiryTagRepository enquiryTagRepository;
     private final EnquiryReplyRepository enquiryReplyRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Enquiry create(EnquiryRequest request) {
@@ -49,7 +52,9 @@ public class EnquiryService {
             enquiry.setProduct(product);
         }
 
-        return enquiryRepository.save(enquiry);
+        Enquiry saved = enquiryRepository.save(enquiry);
+        eventPublisher.publishEvent(new EnquirySubmittedEvent(saved.getId()));
+        return saved;
     }
 
     @Transactional(readOnly = true)

@@ -3,6 +3,7 @@ package com.watchstore.service;
 import com.watchstore.domain.entity.RefreshToken;
 import com.watchstore.domain.entity.User;
 import com.watchstore.domain.enums.Role;
+import com.watchstore.domain.event.UserRegisteredEvent;
 import com.watchstore.exception.ApiException;
 import com.watchstore.infrastructure.redis.RefreshTokenStore;
 import com.watchstore.repository.RefreshTokenRepository;
@@ -20,6 +21,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ public class AuthService {
     private final RefreshTokenStore refreshTokenStore;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public AuthResponse register(AuthRegisterRequest request) {
@@ -48,6 +51,7 @@ public class AuthService {
         user.setLastName(request.lastName());
         user.setRole(Role.CUSTOMER);
         userRepository.save(user);
+        eventPublisher.publishEvent(new UserRegisteredEvent(user.getId()));
 
         return issueTokensForUser(user);
     }

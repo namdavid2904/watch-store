@@ -2,6 +2,7 @@ package com.watchstore.security;
 
 import com.watchstore.domain.entity.User;
 import com.watchstore.domain.enums.Role;
+import com.watchstore.domain.event.UserRegisteredEvent;
 import com.watchstore.exception.ApiException;
 import com.watchstore.repository.UserRepository;
 import com.watchstore.service.AuthService;
@@ -13,6 +14,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -29,6 +31,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final AuthService authService;
     private final AuthCookieService authCookieService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
@@ -59,7 +62,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     newUser.setOauthProvider("google");
                     newUser.setOauthId(oauthId);
                     newUser.setRole(Role.CUSTOMER);
-                    return userRepository.save(newUser);
+                    User saved = userRepository.save(newUser);
+                    eventPublisher.publishEvent(new UserRegisteredEvent(saved.getId()));
+                    return saved;
                 });
 
         if (user.getOauthProvider() == null) {
