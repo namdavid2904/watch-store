@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body th:replace="~{email/layout :: layout(~{::content})}">
+<div th:fragment="content">
+    <p>Hello <span th:text="${customerName}">Customer</span>,</p>
+    <p>Thank you for your order. Payment has been confirmed and we are preparing your timepiece for shipment.</p>
+
+    <p class="muted">
+        Order reference: <strong th:text="${orderId}">ORDER-ID</strong><br/>
+        Payment reference: <strong th:text="${paymentIntentId}">pi_xxx</strong>
+    </p>
+
+    <table class="items">
+        <thead>
+        <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${lineItems}">
+            <td th:text="${item.productName}">Watch</td>
+            <td th:text="${item.quantity}">1</td>
+            <td th:text="${item.unitPrice}">$0.00</td>
+            <td th:text="${item.lineTotal}">$0.00</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p class="total">Order total: <span th:text="${totalAmount}">$0.00</span></p>
+
+    <div th:if="${shippingAddress != null}">
+        <p><strong>Shipping address</strong></p>
+        <div class="address">
+            <span th:if="${shippingAddress.line1}" th:text="${shippingAddress.line1}">Line 1</span><br th:if="${shippingAddress.line1}"/>
+            <span th:if="${shippingAddress.line2}" th:text="${shippingAddress.line2}">Line 2</span><br th:if="${shippingAddress.line2}"/>
+            <span th:if="${shippingAddress.city}" th:text="${shippingAddress.city}">City</span><span th:if="${shippingAddress.city and shippingAddress.postalCode}">, </span><span th:if="${shippingAddress.postalCode}" th:text="${shippingAddress.postalCode}">Postal</span><br th:if="${shippingAddress.city or shippingAddress.postalCode}"/>
+            <span th:if="${shippingAddress.country}" th:text="${shippingAddress.country}">Country</span>
+        </div>
+    </div>
+
+    <p class="muted">If you have questions about your order, reply to this email or visit our boutique online.</p>
+    <p th:if="${shopUrl}">
+        <a th:href="${shopUrl}" th:text="${shopUrl}">Shop</a>
+    </p>
+</div>
+</body>
+</html>
