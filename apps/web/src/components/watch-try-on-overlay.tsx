@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TryOnAssetLayer } from "@/components/try-on-asset-layer";
 import { TryOnControls } from "@/components/try-on-controls";
 import { TryOnStage } from "@/components/try-on-stage";
 import { TryOnLoadingState, TryOnPermissionFallback } from "@/components/try-on-status-states";
-import { WatchViewer3D } from "@/components/watch-viewer-3d";
 import { useCameraStream } from "@/hooks/use-camera-stream";
 import { useTryOnTransform } from "@/hooks/use-try-on-transform";
 import { parseCaseDiameterMm } from "@/lib/watch-sizing";
@@ -18,8 +18,6 @@ type WatchTryOnOverlayProps = {
   model3dUrl: string | null;
   fallbackImageUrl: string | null;
 };
-
-const BASE_MM_TO_PX = 3.2;
 
 export function WatchTryOnOverlay({
   open,
@@ -109,8 +107,6 @@ export function WatchTryOnOverlay({
     return null;
   }
 
-  const ringSizePx = caseDiameterMm * BASE_MM_TO_PX * transform.scale;
-
   const workspaceContent = !showPermissionFallback ? (
     <div
       className="h-full w-full"
@@ -126,39 +122,13 @@ export function WatchTryOnOverlay({
         adjustScale(-event.deltaY * 0.0015);
       }}
     >
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2"
-        style={{
-          transform: `translate(calc(-50% + ${transform.x}px), calc(-50% + ${transform.y}px)) scale(${transform.scale}) rotate(${transform.rotation}deg)`,
-        }}
-      >
-        <div
-          className="relative flex items-center justify-center"
-          style={{ width: ringSizePx, height: ringSizePx }}
-        >
-          <div className="absolute inset-0 rounded-full border-2 border-dashed border-white/70" aria-hidden />
-          <div className="relative h-[78%] w-[78%]">
-            {model3dUrl ? (
-              <WatchViewer3D modelUrl={model3dUrl} overlayMode className="h-full w-full min-h-0" />
-            ) : fallbackImageUrl ? (
-              <div className="relative h-full w-full overflow-hidden rounded-full">
-                <Image
-                  src={fallbackImageUrl}
-                  alt={productName}
-                  fill
-                  className="object-cover"
-                  sizes="320px"
-                  unoptimized={fallbackImageUrl.startsWith("blob:")}
-                />
-              </div>
-            ) : (
-              <div className="flex h-full w-full items-center justify-center rounded-full border border-white/40 bg-black/30 text-xs uppercase tracking-[0.2em] text-white/80">
-                {caseDiameterMm}mm
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <TryOnAssetLayer
+        productName={productName}
+        caseDiameterMm={caseDiameterMm}
+        transform={transform}
+        imageUrl={fallbackImageUrl}
+        model3dUrl={model3dUrl}
+      />
     </div>
   ) : null;
 
