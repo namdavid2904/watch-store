@@ -99,6 +99,10 @@ GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET  (if using Google login)
 STRIPE_ENABLED=true
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+APP_MAIL_ENABLED=true
+APP_MAIL_FROM_ADDRESS=noreply@yourdomain.com
+APP_MAIL_ADMIN_ALERT_ADDRESS=admin@yourdomain.com
+APP_MAIL_REGION=us-east-1
 ```
 
 
@@ -192,6 +196,34 @@ stripe listen --forward-to localhost:8080/api/v1/webhooks/stripe
 3. Stripe webhook updates order to `PAID` or `FAILED`.
 
 Verify webhook deliveries in Stripe Dashboard → Developers → Webhooks → event log after a test purchase.
+
+### AWS SES (transactional email)
+
+Production sends order confirmations, welcome emails, and admin enquiry alerts via **AWS SES v2**. Local development uses a logging stub (`APP_MAIL_ENABLED=false` by default) — no Mailhog required.
+
+#### AWS setup
+
+1. Verify your sending domain (or individual address) in **SES → Verified identities**.
+2. Request production access if your account is still in the SES sandbox.
+3. Attach IAM permissions to the API credentials (or role): `ses:SendEmail`, `ses:SendRawEmail` on the verified identity / region.
+4. Use the same `AWS_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` as S3 unless you use an IAM role on ECS.
+
+#### API environment variables
+
+| Variable | Example | Notes |
+|----------|---------|-------|
+| `APP_MAIL_ENABLED` | `true` | Enables `SesEmailGateway`; `false` logs emails only |
+| `APP_MAIL_FROM_ADDRESS` | `noreply@yourdomain.com` | Must be a verified SES identity |
+| `APP_MAIL_ADMIN_ALERT_ADDRESS` | `admin@yourdomain.com` | Recipient for enquiry alerts |
+| `APP_MAIL_REGION` | `us-east-1` | Optional; defaults to `AWS_REGION` |
+
+Set `FRONTEND_WEB_URL` so welcome and order emails include shop links.
+
+#### Local development
+
+Leave `APP_MAIL_ENABLED=false`. Trigger flows (register, enquiry, paid order via stub webhook) and confirm HTML subjects appear in API logs.
+
+Prometheus counters: `emails.sent.total`, `emails.failed.total`.
 
 ---
 
