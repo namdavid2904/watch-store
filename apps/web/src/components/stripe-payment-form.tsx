@@ -57,10 +57,16 @@ function PaymentFormInner({ orderId, onSuccess, onError }: Omit<StripePaymentFor
 
   return (
     <form className="space-y-6" onSubmit={(event) => void handleSubmit(event)}>
-      <PaymentElement />
+      <div className="luxury-surface rounded-xl border border-border/80 p-5 md:p-6">
+        <p className="text-muted-foreground mb-4 text-xs uppercase tracking-[0.2em]">Secure payment</p>
+        <PaymentElement />
+      </div>
       <Button className="w-full" type="submit" disabled={!stripe || submitting} size="lg">
         {submitting ? "Processing payment..." : "Complete payment"}
       </Button>
+      <p className="text-muted-foreground text-center text-xs">
+        Payments are processed securely by Stripe. Your card details never touch our servers.
+      </p>
     </form>
   );
 }
