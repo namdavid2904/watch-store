@@ -4,7 +4,12 @@ import { catalogClient } from "@/lib/catalog";
 import { ProductCard } from "@/components/product-card";
 
 export async function FeaturedCollection() {
-  const products = await catalogClient.listProducts({ size: 3, sort: "createdAt,desc" });
+  let products;
+  try {
+    products = await catalogClient.listProducts({ size: 3, sort: "createdAt,desc" });
+  } catch {
+    return null;
+  }
 
   return (
     <section className="space-y-8">
