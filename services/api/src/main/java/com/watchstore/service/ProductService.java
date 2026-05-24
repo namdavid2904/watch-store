@@ -154,6 +154,24 @@ public class ProductService {
         return productMapper.toResponse(product);
     }
 
+    @Transactional
+    public ProductResponse setModel3dUrl(UUID id, String modelKey) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        product.setModel3dUrl(modelKey);
+        catalogCacheService.invalidateAll();
+        return productMapper.toResponse(product);
+    }
+
+    @Transactional
+    public ProductResponse addGalleryImage(UUID id, String imageKey) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        product.getGalleryImages().add(imageKey);
+        catalogCacheService.invalidateAll();
+        return productMapper.toResponse(product);
+    }
+
     private void applyCreateRequest(Product product, CreateProductRequest request, Brand brand, Category category) {
         product.setName(request.name());
         product.setSlug(request.slug());

@@ -20,9 +20,18 @@ public class S3ImageService {
     private String bucket;
 
     public String uploadProductImage(UUID productId, MultipartFile file) throws IOException {
-        String extension = extractExtension(file.getOriginalFilename());
+        String extension = extractExtension(file.getOriginalFilename(), ".jpg");
         String key = "products/" + productId + "/" + UUID.randomUUID() + extension;
+        return uploadAsset(key, file);
+    }
 
+    public String uploadProductModel(UUID productId, MultipartFile file) throws IOException {
+        String extension = extractExtension(file.getOriginalFilename(), ".glb");
+        String key = "products/" + productId + "/models/" + UUID.randomUUID() + extension;
+        return uploadAsset(key, file);
+    }
+
+    private String uploadAsset(String key, MultipartFile file) throws IOException {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
@@ -33,9 +42,9 @@ public class S3ImageService {
         return key;
     }
 
-    private String extractExtension(String filename) {
+    private String extractExtension(String filename, String defaultExtension) {
         if (filename == null || !filename.contains(".")) {
-            return ".jpg";
+            return defaultExtension;
         }
         return filename.substring(filename.lastIndexOf('.'));
     }

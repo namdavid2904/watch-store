@@ -52,4 +52,18 @@ public class AdminProductController {
         String imageKey = s3ImageService.uploadProductImage(id, file);
         return ResponseEntity.ok(productService.addImage(id, imageKey));
     }
+
+    @PostMapping("/{id}/model-3d")
+    public ResponseEntity<ProductResponse> uploadModel3d(@PathVariable UUID id,
+                                                           @RequestPart("file") MultipartFile file) throws IOException {
+        String modelKey = s3ImageService.uploadProductModel(id, file);
+        return ResponseEntity.ok(productService.setModel3dUrl(id, modelKey));
+    }
+
+    @PostMapping("/{id}/gallery-images")
+    public ResponseEntity<ProductResponse> uploadGalleryImage(@PathVariable UUID id,
+                                                                @RequestPart("file") MultipartFile file) throws IOException {
+        String imageKey = s3ImageService.uploadProductImage(id, file);
+        return ResponseEntity.ok(productService.addGalleryImage(id, imageKey));
+    }
 }
