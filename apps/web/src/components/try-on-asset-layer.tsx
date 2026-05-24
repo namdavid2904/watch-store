@@ -10,6 +10,9 @@ type TryOnAssetLayerProps = {
   transform: TryOnTransform;
   imageUrl: string | null;
   model3dUrl?: string | null;
+  onDragStart: (clientX: number, clientY: number) => void;
+  onDragMove: (clientX: number, clientY: number) => void;
+  onDragEnd: () => void;
 };
 
 export function TryOnAssetLayer({
@@ -17,15 +20,25 @@ export function TryOnAssetLayer({
   caseDiameterMm,
   transform,
   imageUrl,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }: TryOnAssetLayerProps) {
   const sizePx = computeOverlayDiameterPx(caseDiameterMm, transform.scale);
 
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-1/2"
+      className="absolute left-1/2 top-1/2 cursor-grab touch-none active:cursor-grabbing"
       style={{
         transform: `translate(calc(-50% + ${transform.x}px), calc(-50% + ${transform.y}px)) rotate(${transform.rotation}deg)`,
       }}
+      onPointerDown={(event) => {
+        event.currentTarget.setPointerCapture(event.pointerId);
+        onDragStart(event.clientX, event.clientY);
+      }}
+      onPointerMove={(event) => onDragMove(event.clientX, event.clientY)}
+      onPointerUp={onDragEnd}
+      onPointerCancel={onDragEnd}
     >
       <div
         className="relative flex items-center justify-center drop-shadow-2xl"

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TryOnAssetLayer } from "@/components/try-on-asset-layer";
 import { TryOnControls } from "@/components/try-on-controls";
+import { TryOnGestureLayer } from "@/components/try-on-gesture-layer";
 import { TryOnStage } from "@/components/try-on-stage";
 import { TryOnLoadingState, TryOnPermissionFallback } from "@/components/try-on-status-states";
 import { useCameraStream } from "@/hooks/use-camera-stream";
@@ -36,7 +37,7 @@ export function WatchTryOnOverlay({
     stopStream,
     toggleFacingMode,
   } = useCameraStream();
-  const { transform, nudge, adjustScale, reset } = useTryOnTransform();
+  const { transform, nudge, adjustScale, adjustRotation, reset } = useTryOnTransform();
   const [uploadUrl, setUploadUrl] = useState<string | null>(null);
   const dragOrigin = useRef<{ x: number; y: number } | null>(null);
 
@@ -108,28 +109,18 @@ export function WatchTryOnOverlay({
   }
 
   const workspaceContent = !showPermissionFallback ? (
-    <div
-      className="h-full w-full"
-      onPointerDown={(event) => {
-        event.currentTarget.setPointerCapture(event.pointerId);
-        handlePointerDown(event.clientX, event.clientY);
-      }}
-      onPointerMove={(event) => handlePointerMove(event.clientX, event.clientY)}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      onWheel={(event) => {
-        event.preventDefault();
-        adjustScale(-event.deltaY * 0.0015);
-      }}
-    >
+    <TryOnGestureLayer onAdjustScale={adjustScale} onAdjustRotation={adjustRotation}>
       <TryOnAssetLayer
         productName={productName}
         caseDiameterMm={caseDiameterMm}
         transform={transform}
         imageUrl={fallbackImageUrl}
         model3dUrl={model3dUrl}
+        onDragStart={handlePointerDown}
+        onDragMove={handlePointerMove}
+        onDragEnd={handlePointerUp}
       />
-    </div>
+    </TryOnGestureLayer>
   ) : null;
 
   return (
@@ -181,10 +172,13 @@ export function WatchTryOnOverlay({
           <TryOnControls
             caseDiameterMm={caseDiameterMm}
             displayScale={transform.scale}
+            rotationDeg={transform.rotation}
             cameraEnabled={cameraEnabled}
             usingUpload={usingUpload}
             onToggleCamera={handleToggleCamera}
             onUploadPhoto={handleUploadPhoto}
+            onScaleBy={adjustScale}
+            onRotateBy={adjustRotation}
             onReset={reset}
             onClose={onClose}
           />
