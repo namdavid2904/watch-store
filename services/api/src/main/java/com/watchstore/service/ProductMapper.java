@@ -29,6 +29,8 @@ public class ProductMapper {
                 product.getCategory().getName(),
                 product.getColor(),
                 product.getImages(),
+                product.getModel3dUrl(),
+                product.getGalleryImages(),
                 product.getMovementType(),
                 product.getCaseMaterial(),
                 product.getCaseDimension(),

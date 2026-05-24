@@ -18,6 +18,8 @@ public record ProductResponse(
         String categoryName,
         String color,
         List<String> images,
+        String model3dUrl,
+        List<String> galleryImages,
         MovementType movementType,
         String caseMaterial,
         String caseDimension,

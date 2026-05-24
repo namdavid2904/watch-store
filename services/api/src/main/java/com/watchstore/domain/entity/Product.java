@@ -63,6 +63,13 @@ public class Product {
     @Column(columnDefinition = "jsonb", nullable = false)
     private List<String> images = new ArrayList<>();
 
+    @Column(name = "model_3d_url", length = 500)
+    private String model3dUrl;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "gallery_images", columnDefinition = "jsonb", nullable = false)
+    private List<String> galleryImages = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     @Column(name = "movement_type", nullable = false, length = 20)
     private MovementType movementType;
