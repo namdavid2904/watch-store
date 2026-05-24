@@ -56,16 +56,17 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const [brands, categories] = await Promise.all([catalogClient.listBrands(), catalogClient.listCategories()]);
 
   return (
-    <div className="space-y-10">
-      <div className="space-y-3 border-b pb-8">
+    <div className="space-y-12">
+      <div className="luxury-surface space-y-4 rounded-2xl border px-8 py-10 md:px-12">
         <p className="text-muted-foreground text-xs uppercase tracking-[0.28em]">The Collection</p>
         <h1 className="font-serif text-4xl font-semibold md:text-5xl">Shop watches</h1>
-        <p className="text-muted-foreground max-w-2xl text-lg">
-          Filter by maison, movement, and specification to discover your next statement piece.
+        <p className="text-muted-foreground max-w-2xl text-lg leading-relaxed">
+          Filter by maison, movement, and specification to discover your next statement piece — each
+          authenticated and presented with full technical disclosure.
         </p>
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-12 lg:grid-cols-[280px_1fr] lg:gap-14">
         <Suspense fallback={<div className="text-muted-foreground text-sm">Loading filters...</div>}>
           <FilterPanel brands={brands} categories={categories} />
         </Suspense>
