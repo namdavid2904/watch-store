@@ -154,6 +154,22 @@ export function createAdminClient(apiBaseUrl: string, getContext: () => AdminReq
         body: formData,
       });
     },
+    uploadProductModel3d: (id: string, file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return request<Product>(`/api/v1/admin/products/${id}/model-3d`, {
+        method: "POST",
+        body: formData,
+      });
+    },
+    uploadProductGalleryImage: (id: string, file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return request<Product>(`/api/v1/admin/products/${id}/gallery-images`, {
+        method: "POST",
+        body: formData,
+      });
+    },
     listBrands: () => request<Brand[]>("/api/v1/admin/brands"),
     createBrand: (body: { name: string; slug: string }) =>
       request<Brand>("/api/v1/admin/brands", { method: "POST", body: JSON.stringify(body) }),

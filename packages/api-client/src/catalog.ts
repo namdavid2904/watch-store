@@ -12,6 +12,8 @@ export interface Product {
   categoryName: string;
   color: string | null;
   images: string[];
+  model3dUrl: string | null;
+  galleryImages: string[];
   movementType: MovementType;
   caseMaterial: string | null;
   caseDimension: string | null;
