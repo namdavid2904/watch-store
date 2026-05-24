@@ -59,7 +59,7 @@ function PaymentFormInner({ orderId, onSuccess, onError }: Omit<StripePaymentFor
     <form className="space-y-6" onSubmit={(event) => void handleSubmit(event)}>
       <div className="luxury-surface rounded-xl border border-border/80 p-5 md:p-6">
         <p className="text-muted-foreground mb-4 text-xs uppercase tracking-[0.2em]">Secure payment</p>
-        <PaymentElement />
+        <PaymentElement options={{ wallets: { applePay: "never", googlePay: "never" } }} />
       </div>
       <Button className="w-full" type="submit" disabled={!stripe || submitting} size="lg">
         {submitting ? "Processing payment..." : "Complete payment"}
@@ -76,6 +76,7 @@ export function StripePaymentForm({ clientSecret, orderId, onSuccess, onError }:
     () => ({
       clientSecret,
       appearance: stripeAppearance,
+      paymentMethodOrder: ["card"],
     }),
     [clientSecret]
   );
