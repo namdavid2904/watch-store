@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 24 10% 10%;
+    --card: 40 30% 99%;
+    --card-foreground: 24 10% 10%;
+    --primary: 24 10% 10%;
+    --primary-foreground: 40 33% 98%;
+    --secondary: 36 18% 92%;
+    --secondary-foreground: 24 10% 16%;
+    --muted: 36 16% 94%;
+    --muted-foreground: 24 8% 42%;
+    --accent: 38 45% 52%;
+    --accent-foreground: 40 33% 98%;
+    --destructive: 0 72% 42%;
+    --destructive-foreground: 40 33% 98%;
+    --border: 36 14% 88%;
+    --input: 36 14% 88%;
+    --ring: 38 45% 52%;
+    --radius: 0.375rem;
+  }
+
+  .dark {
+    --background: 220 16% 8%;
+    --foreground: 40 20% 96%;
+    --card: 220 14% 11%;
+    --card-foreground: 40 20% 96%;
+    --primary: 40 20% 96%;
+    --primary-foreground: 220 16% 8%;
+    --secondary: 220 12% 16%;
+    --secondary-foreground: 40 20% 92%;
+    --muted: 220 12% 16%;
+    --muted-foreground: 220 8% 62%;
+    --accent: 38 45% 52%;
+    --accent-foreground: 220 16% 8%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 40 20% 96%;
+    --border: 220 10% 20%;
+    --input: 220 10% 20%;
+    --ring: 38 45% 52%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif tracking-tight;
+  }
+}
+
+@layer utilities {
+  .luxury-surface {
+    @apply border-border bg-card/80 shadow-sm backdrop-blur-sm;
+  }
+
+  .luxury-hover-lift {
+    @apply transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md;
+  }
+}
