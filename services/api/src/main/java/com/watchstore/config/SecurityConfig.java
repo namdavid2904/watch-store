@@ -5,6 +5,7 @@ import com.watchstore.security.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -45,6 +46,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products/*/reviews").authenticated()
                         .requestMatchers("/api/v1/products/**", "/api/v1/brands/**", "/api/v1/categories/**").permitAll()
                         .requestMatchers("/api/v1/cart/merge").authenticated()
                         .requestMatchers("/api/v1/cart/**").permitAll()
