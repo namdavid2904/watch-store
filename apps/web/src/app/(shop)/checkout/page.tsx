@@ -191,6 +191,7 @@ export default function CheckoutPage() {
             <div className="border-border rounded-lg border p-4">
               <StripePaymentForm
                 clientSecret={confirmedOrder.clientSecret}
+                orderId={confirmedOrder.orderId}
                 onError={(message) => setError(message)}
                 onSuccess={() => router.push(`/checkout/confirmation/${confirmedOrder.orderId}`)}
               />
