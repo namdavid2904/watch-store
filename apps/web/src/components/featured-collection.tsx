@@ -3,7 +3,15 @@ import { Button } from "@watch-store/ui";
 import { catalogClient } from "@/lib/catalog";
 import { ProductCard } from "@/components/product-card";
 
+function isProductionBuild(): boolean {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
 export async function FeaturedCollection() {
+  if (isProductionBuild()) {
+    return null;
+  }
+
   let products;
   try {
     products = await catalogClient.listProducts({ size: 3, sort: "createdAt,desc" });

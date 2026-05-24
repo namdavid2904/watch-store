@@ -78,17 +78,19 @@ type NextFetchInit = RequestInit & {
   };
 };
 
+const CATALOG_FETCH_TIMEOUT_MS = 10_000;
+
 export function createCatalogClient(apiBaseUrl: string) {
   async function request<T>(path: string, init?: NextFetchInit): Promise<T> {
-    const requestInit: NextFetchInit = {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
       ...init,
       headers: {
         Accept: "application/json",
         ...(init?.headers ?? {}),
       },
       next: init?.next ?? { revalidate: 60 },
-    };
-    const response = await fetch(`${apiBaseUrl}${path}`, requestInit as RequestInit);
+      signal: init?.signal ?? AbortSignal.timeout(CATALOG_FETCH_TIMEOUT_MS),
+    } as RequestInit);
 
     if (!response.ok) {
       throw new Error(`Catalog request failed: ${response.status}`);

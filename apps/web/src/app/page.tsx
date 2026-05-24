@@ -6,6 +6,8 @@ import { HomeHero } from "@/components/home-hero";
 import { ProductGridSkeleton } from "@/components/product-grid-skeleton";
 import { RevealOnScroll } from "@/components/reveal-on-scroll";
 
+export const revalidate = 60;
+
 export default function HomePage() {
   return (
     <section className="space-y-24 pb-8">
