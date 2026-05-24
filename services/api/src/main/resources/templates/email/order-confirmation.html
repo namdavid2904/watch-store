@@ -34,10 +34,10 @@
     <div th:if="${shippingAddress != null}">
         <p><strong>Shipping address</strong></p>
         <div class="address">
-            <span th:if="${shippingAddress.line1}" th:text="${shippingAddress.line1}">Line 1</span><br th:if="${shippingAddress.line1}"/>
-            <span th:if="${shippingAddress.line2}" th:text="${shippingAddress.line2}">Line 2</span><br th:if="${shippingAddress.line2}"/>
-            <span th:if="${shippingAddress.city}" th:text="${shippingAddress.city}">City</span><span th:if="${shippingAddress.city and shippingAddress.postalCode}">, </span><span th:if="${shippingAddress.postalCode}" th:text="${shippingAddress.postalCode}">Postal</span><br th:if="${shippingAddress.city or shippingAddress.postalCode}"/>
-            <span th:if="${shippingAddress.country}" th:text="${shippingAddress.country}">Country</span>
+            <span th:if="${shippingAddress['line1']}" th:text="${shippingAddress['line1']}">Line 1</span><br th:if="${shippingAddress['line1']}"/>
+            <span th:if="${shippingAddress['line2']}" th:text="${shippingAddress['line2']}">Line 2</span><br th:if="${shippingAddress['line2']}"/>
+            <span th:if="${shippingAddress['city']}" th:text="${shippingAddress['city']}">City</span><span th:if="${shippingAddress['city'] != null and shippingAddress['postalCode'] != null}">, </span><span th:if="${shippingAddress['postalCode']}" th:text="${shippingAddress['postalCode']}">Postal</span><br th:if="${shippingAddress['city'] != null or shippingAddress['postalCode'] != null}"/>
+            <span th:if="${shippingAddress['country']}" th:text="${shippingAddress['country']}">Country</span>
         </div>
     </div>
 
