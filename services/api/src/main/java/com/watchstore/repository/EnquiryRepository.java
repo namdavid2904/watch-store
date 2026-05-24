@@ -9,4 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface EnquiryRepository extends JpaRepository<Enquiry, UUID> {
 
     List<Enquiry> findByStatusOrderByCreatedAtDesc(EnquiryStatus status);
+
+    List<Enquiry> findByCategoryOrderByCreatedAtDesc(String category);
 }
