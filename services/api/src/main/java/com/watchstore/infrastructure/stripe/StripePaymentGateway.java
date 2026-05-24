@@ -42,13 +42,7 @@ public class StripePaymentGateway implements PaymentGateway {
                 .setAmount(amountCents)
                 .setCurrency(normalizedCurrency)
                 .putMetadata("orderId", orderId.toString())
-                .setAutomaticPaymentMethods(
-                        com.stripe.param.PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
-                                .setEnabled(true)
-                                .setAllowRedirects(
-                                        com.stripe.param.PaymentIntentCreateParams.AutomaticPaymentMethods
-                                                .AllowRedirects.NEVER)
-                                .build());
+                .addPaymentMethodType("card");
 
         if (metadata != null) {
             metadata.forEach((key, value) -> {
