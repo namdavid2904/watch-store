@@ -66,9 +66,7 @@ export function createReviewsClient(apiBaseUrl: string, getContext: () => Review
 
   return {
     listReviews: (slug: string, page = 0, size = 10) =>
-      request<ReviewPage>(`/api/v1/products/${slug}/reviews?page=${page}&size=${size}`, {
-        next: { revalidate: 60 },
-      } as RequestInit & { next?: { revalidate?: number } }),
+      request<ReviewPage>(`/api/v1/products/${slug}/reviews?page=${page}&size=${size}`),
 
     createReview: (slug: string, body: CreateReviewRequest) =>
       request<Review>(`/api/v1/products/${slug}/reviews`, {
