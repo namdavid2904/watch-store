@@ -71,6 +71,9 @@ class StripePaymentGatewayTest {
             paymentIntentStatic.verify(() -> PaymentIntent.create(captor.capture()));
             assertEquals(9999L, captor.getValue().getAmount());
             assertEquals("usd", captor.getValue().getCurrency());
+            assertEquals(
+                    PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER,
+                    captor.getValue().getAutomaticPaymentMethods().getAllowRedirects());
         }
     }
 
