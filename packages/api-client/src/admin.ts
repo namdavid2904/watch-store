@@ -98,6 +98,8 @@ export interface InventoryHealthItem {
   unitsSoldLast7Days: number;
   daysUntilStockout: number;
 }
+
+export interface CreateProductRequest {
   name: string;
   slug: string;
   description?: string;
