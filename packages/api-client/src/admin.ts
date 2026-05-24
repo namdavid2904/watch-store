@@ -65,7 +65,39 @@ export interface EnquiryDetail extends Enquiry {
   replies: EnquiryReply[];
 }
 
-export interface CreateProductRequest {
+export interface BrandTurnoverItem {
+  brandName: string;
+  unitsSold: number;
+  revenue: number;
+}
+
+export interface TelemetrySummary {
+  ordersCreated: number;
+  checkoutFailures: number;
+  inventoryConflicts: number;
+  cacheHitRatio: number;
+  stripeWebhookEvents: number;
+}
+
+export interface CheckoutErrorMetric {
+  label: string;
+  count: number;
+}
+
+export interface CacheStats {
+  hits: number;
+  misses: number;
+  hitRatio: number;
+}
+
+export interface InventoryHealthItem {
+  productId: string;
+  productName: string;
+  brandName: string;
+  quantityAvailable: number;
+  unitsSoldLast7Days: number;
+  daysUntilStockout: number;
+}
   name: string;
   slug: string;
   description?: string;
@@ -238,6 +270,12 @@ export function createAdminClient(apiBaseUrl: string, getContext: () => AdminReq
         method: "PUT",
         body: JSON.stringify({ role }),
       }),
+    getTelemetrySummary: () => request<TelemetrySummary>("/api/v1/admin/telemetry/summary"),
+    getCheckoutErrors: () => request<CheckoutErrorMetric[]>("/api/v1/admin/telemetry/checkout-errors"),
+    getCacheStats: () => request<CacheStats>("/api/v1/admin/telemetry/cache-stats"),
+    getInventoryHealth: () => request<InventoryHealthItem[]>("/api/v1/admin/telemetry/inventory-health"),
+    getBrandTurnover: (days = 30) =>
+      request<BrandTurnoverItem[]>(`/api/v1/admin/telemetry/brand-turnover?days=${days}`),
   };
 }
 
