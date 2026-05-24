@@ -18,6 +18,7 @@ import com.watchstore.service.ThymeleafEmailTemplateService.OrderConfirmationCon
 import com.watchstore.service.ThymeleafEmailTemplateService.OrderLineItemContext;
 import com.watchstore.service.ThymeleafEmailTemplateService.RenderedEmail;
 import com.watchstore.service.ThymeleafEmailTemplateService.WelcomeContext;
+import io.micrometer.core.instrument.Counter;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -39,69 +40,87 @@ public class EmailEventListener {
     private final ThymeleafEmailTemplateService templateService;
     private final EmailGateway emailGateway;
     private final EmailProperties emailProperties;
+    private final Counter emailsSentTotal;
+    private final Counter emailsFailedTotal;
 
     @Async
     @EventListener
     @Transactional(readOnly = true)
     public void onOrderPaid(OrderPaidEvent event) {
-        Order order = orderRepository.findByIdWithDetails(event.orderId())
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        try {
+            Order order = orderRepository.findByIdWithDetails(event.orderId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        User user = order.getUser();
-        List<OrderLineItemContext> lineItems = order.getOrderItems().stream()
-                .map(this::toLineItemContext)
-                .toList();
+            User user = order.getUser();
+            List<OrderLineItemContext> lineItems = order.getOrderItems().stream()
+                    .map(this::toLineItemContext)
+                    .toList();
 
-        OrderConfirmationContext context = new OrderConfirmationContext(
-                displayName(user),
-                order.getId(),
-                order.getPaymentIntentId(),
-                lineItems,
-                order.getTotalAmount(),
-                order.getShippingAddress());
+            OrderConfirmationContext context = new OrderConfirmationContext(
+                    displayName(user),
+                    order.getId(),
+                    order.getPaymentIntentId(),
+                    lineItems,
+                    order.getTotalAmount(),
+                    order.getShippingAddress());
 
-        sendRendered(templateService.renderOrderConfirmation(context), user.getEmail());
+            sendRendered(templateService.renderOrderConfirmation(context), user.getEmail());
+        } catch (Exception exception) {
+            emailsFailedTotal.increment();
+            log.error("Failed to send order confirmation email for order {}", event.orderId(), exception);
+        }
     }
 
     @Async
     @EventListener
     @Transactional(readOnly = true)
     public void onUserRegistered(UserRegisteredEvent event) {
-        User user = userRepository.findById(event.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        try {
+            User user = userRepository.findById(event.userId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        sendRendered(templateService.renderWelcome(new WelcomeContext(user.getEmail())), user.getEmail());
+            sendRendered(templateService.renderWelcome(new WelcomeContext(user.getEmail())), user.getEmail());
+        } catch (Exception exception) {
+            emailsFailedTotal.increment();
+            log.error("Failed to send welcome email for user {}", event.userId(), exception);
+        }
     }
 
     @Async
     @EventListener
     @Transactional(readOnly = true)
     public void onEnquirySubmitted(EnquirySubmittedEvent event) {
-        Enquiry enquiry = enquiryRepository.findByIdWithProduct(event.enquiryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Enquiry not found"));
+        try {
+            Enquiry enquiry = enquiryRepository.findByIdWithProduct(event.enquiryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Enquiry not found"));
 
-        String adminAddress = emailProperties.getAdminAlertAddress();
-        if (!StringUtils.hasText(adminAddress)) {
-            log.warn("Skipping admin enquiry alert — app.mail.admin-alert-address is not configured");
-            return;
+            String adminAddress = emailProperties.getAdminAlertAddress();
+            if (!StringUtils.hasText(adminAddress)) {
+                log.warn("Skipping admin enquiry alert — app.mail.admin-alert-address is not configured");
+                return;
+            }
+
+            String productName = enquiry.getProduct() != null ? enquiry.getProduct().getName() : null;
+            AdminEnquiryAlertContext context = new AdminEnquiryAlertContext(
+                    enquiry.getId(),
+                    enquiry.getName(),
+                    enquiry.getEmail(),
+                    enquiry.getMobile(),
+                    enquiry.getCategory(),
+                    enquiry.getSubject(),
+                    productName,
+                    enquiry.getMessage());
+
+            sendRendered(templateService.renderAdminEnquiryAlert(context), adminAddress);
+        } catch (Exception exception) {
+            emailsFailedTotal.increment();
+            log.error("Failed to send admin enquiry alert for enquiry {}", event.enquiryId(), exception);
         }
-
-        String productName = enquiry.getProduct() != null ? enquiry.getProduct().getName() : null;
-        AdminEnquiryAlertContext context = new AdminEnquiryAlertContext(
-                enquiry.getId(),
-                enquiry.getName(),
-                enquiry.getEmail(),
-                enquiry.getMobile(),
-                enquiry.getCategory(),
-                enquiry.getSubject(),
-                productName,
-                enquiry.getMessage());
-
-        sendRendered(templateService.renderAdminEnquiryAlert(context), adminAddress);
     }
 
     private void sendRendered(RenderedEmail rendered, String recipient) {
         emailGateway.send(new EmailMessage(recipient, rendered.subject(), rendered.htmlBody()));
+        emailsSentTotal.increment();
     }
 
     private OrderLineItemContext toLineItemContext(OrderItem item) {

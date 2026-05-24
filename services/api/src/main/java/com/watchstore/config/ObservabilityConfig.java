@@ -52,6 +52,20 @@ public class ObservabilityConfig {
     }
 
     @Bean
+    public Counter emailsSentTotal(MeterRegistry registry) {
+        return Counter.builder("emails.sent.total")
+                .description("Total transactional emails sent successfully")
+                .register(registry);
+    }
+
+    @Bean
+    public Counter emailsFailedTotal(MeterRegistry registry) {
+        return Counter.builder("emails.failed.total")
+                .description("Total transactional email send failures")
+                .register(registry);
+    }
+
+    @Bean
     public Gauge catalogCacheHitRatio(MeterRegistry registry,
                                       Counter catalogCacheHits,
                                       Counter catalogCacheMisses) {
