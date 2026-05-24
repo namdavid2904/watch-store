@@ -46,6 +46,9 @@ export interface Enquiry {
   mobile: string | null;
   message: string;
   status: EnquiryStatus;
+  productId?: string | null;
+  subject?: string | null;
+  category?: string | null;
   createdAt: string;
 }
 

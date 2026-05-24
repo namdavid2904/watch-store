@@ -1,9 +1,11 @@
 package com.watchstore.service;
 
 import com.watchstore.domain.entity.Enquiry;
+import com.watchstore.domain.entity.Product;
 import com.watchstore.domain.enums.EnquiryStatus;
 import com.watchstore.exception.ResourceNotFoundException;
 import com.watchstore.repository.EnquiryRepository;
+import com.watchstore.repository.ProductRepository;
 import com.watchstore.web.dto.EnquiryRequest;
 import java.util.List;
 import java.util.UUID;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EnquiryService {
 
     private final EnquiryRepository enquiryRepository;
+    private final ProductRepository productRepository;
 
     @Transactional
     public Enquiry create(EnquiryRequest request) {
@@ -24,7 +27,16 @@ public class EnquiryService {
         enquiry.setEmail(request.email());
         enquiry.setMobile(request.mobile());
         enquiry.setMessage(request.message());
+        enquiry.setSubject(request.subject());
+        enquiry.setCategory(request.category());
         enquiry.setStatus(EnquiryStatus.NEW);
+
+        if (request.productId() != null) {
+            Product product = productRepository.findById(request.productId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+            enquiry.setProduct(product);
+        }
+
         return enquiryRepository.save(enquiry);
     }
 
