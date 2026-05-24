@@ -105,7 +105,7 @@ export function ProductMediaGallery({
         ) : null}
       </div>
 
-      {mediaMode === "3d" && modelUrl ? (
+      {mediaMode === "3d" && modelUrl && !tryOnOpen ? (
         <div className="luxury-surface relative aspect-[4/5] overflow-hidden rounded-2xl">
           <WatchViewer3D className="h-full w-full" modelUrl={modelUrl} />
         </div>

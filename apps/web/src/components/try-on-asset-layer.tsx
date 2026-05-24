@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import type { TryOnTransform } from "@/hooks/use-try-on-transform";
+import { WatchViewer3D } from "@/components/watch-viewer-3d";
 import { computeOverlayDiameterPx } from "@/lib/watch-sizing";
 
 type TryOnAssetLayerProps = {
@@ -20,11 +22,17 @@ export function TryOnAssetLayer({
   caseDiameterMm,
   transform,
   imageUrl,
+  model3dUrl,
   onDragStart,
   onDragMove,
   onDragEnd,
 }: TryOnAssetLayerProps) {
+  const [model3dFailed, setModel3dFailed] = useState(false);
   const sizePx = computeOverlayDiameterPx(caseDiameterMm, transform.scale);
+  const innerSizePx = Math.round(sizePx * 0.72);
+
+  const prefer2d = Boolean(imageUrl);
+  const show3d = Boolean(model3dUrl) && !prefer2d && !model3dFailed;
 
   return (
     <div
@@ -62,7 +70,7 @@ export function TryOnAssetLayer({
         </svg>
 
         <div className="relative flex h-[72%] w-[72%] items-center justify-center">
-          {imageUrl ? (
+          {prefer2d && imageUrl ? (
             <div className="relative h-full w-full">
               <Image
                 src={imageUrl}
@@ -74,6 +82,15 @@ export function TryOnAssetLayer({
                 priority
               />
             </div>
+          ) : show3d && model3dUrl ? (
+            <WatchViewer3D
+              modelUrl={model3dUrl}
+              overlayMode
+              width={innerSizePx}
+              height={innerSizePx}
+              className="relative"
+              onLoadError={() => setModel3dFailed(true)}
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center rounded-full border border-white/50 bg-black/40 px-2 text-center text-xs uppercase tracking-[0.2em] text-white/90">
               {caseDiameterMm}mm
