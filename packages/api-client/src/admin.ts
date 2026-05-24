@@ -52,6 +52,19 @@ export interface Enquiry {
   createdAt: string;
 }
 
+export interface EnquiryReply {
+  id: string;
+  adminUserId: string;
+  adminName: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface EnquiryDetail extends Enquiry {
+  tags: string[];
+  replies: EnquiryReply[];
+}
+
 export interface CreateProductRequest {
   name: string;
   slug: string;
@@ -192,12 +205,32 @@ export function createAdminClient(apiBaseUrl: string, getContext: () => AdminReq
         method: "PUT",
         body: JSON.stringify(status),
       }),
-    listEnquiries: (status?: EnquiryStatus) =>
-      request<Enquiry[]>(`/api/v1/admin/enquiries${status ? `?status=${status}` : ""}`),
+    listEnquiries: (status?: EnquiryStatus, category?: string) => {
+      const params = new URLSearchParams();
+      if (status) params.set("status", status);
+      if (category) params.set("category", category);
+      const query = params.toString();
+      return request<Enquiry[]>(`/api/v1/admin/enquiries${query ? `?${query}` : ""}`);
+    },
+    getEnquiry: (id: string) => request<EnquiryDetail>(`/api/v1/admin/enquiries/${id}`),
     updateEnquiryStatus: (id: string, status: EnquiryStatus) =>
       request<Enquiry>(`/api/v1/admin/enquiries/${id}/status`, {
         method: "PUT",
         body: JSON.stringify(status),
+      }),
+    addEnquiryReply: (id: string, body: string) =>
+      request<EnquiryDetail>(`/api/v1/admin/enquiries/${id}/replies`, {
+        method: "POST",
+        body: JSON.stringify({ body }),
+      }),
+    addEnquiryTag: (id: string, tag: string) =>
+      request<string[]>(`/api/v1/admin/enquiries/${id}/tags`, {
+        method: "POST",
+        body: JSON.stringify({ tag }),
+      }),
+    removeEnquiryTag: (id: string, tag: string) =>
+      request<string[]>(`/api/v1/admin/enquiries/${id}/tags/${encodeURIComponent(tag)}`, {
+        method: "DELETE",
       }),
     listUsers: () => request<AdminUser[]>("/api/v1/admin/users"),
     updateUserRole: (userId: string, role: AdminUser["role"]) =>
