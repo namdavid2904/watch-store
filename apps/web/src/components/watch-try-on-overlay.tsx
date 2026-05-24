@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TryOnControls } from "@/components/try-on-controls";
+import { TryOnStage } from "@/components/try-on-stage";
 import { TryOnLoadingState, TryOnPermissionFallback } from "@/components/try-on-status-states";
 import { WatchViewer3D } from "@/components/watch-viewer-3d";
 import { useCameraStream } from "@/hooks/use-camera-stream";
@@ -110,16 +111,76 @@ export function WatchTryOnOverlay({
 
   const ringSizePx = caseDiameterMm * BASE_MM_TO_PX * transform.scale;
 
+  const workspaceContent = !showPermissionFallback ? (
+    <div
+      className="h-full w-full"
+      onPointerDown={(event) => {
+        event.currentTarget.setPointerCapture(event.pointerId);
+        handlePointerDown(event.clientX, event.clientY);
+      }}
+      onPointerMove={(event) => handlePointerMove(event.clientX, event.clientY)}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onWheel={(event) => {
+        event.preventDefault();
+        adjustScale(-event.deltaY * 0.0015);
+      }}
+    >
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2"
+        style={{
+          transform: `translate(calc(-50% + ${transform.x}px), calc(-50% + ${transform.y}px)) scale(${transform.scale}) rotate(${transform.rotation}deg)`,
+        }}
+      >
+        <div
+          className="relative flex items-center justify-center"
+          style={{ width: ringSizePx, height: ringSizePx }}
+        >
+          <div className="absolute inset-0 rounded-full border-2 border-dashed border-white/70" aria-hidden />
+          <div className="relative h-[78%] w-[78%]">
+            {model3dUrl ? (
+              <WatchViewer3D modelUrl={model3dUrl} overlayMode className="h-full w-full min-h-0" />
+            ) : fallbackImageUrl ? (
+              <div className="relative h-full w-full overflow-hidden rounded-full">
+                <Image
+                  src={fallbackImageUrl}
+                  alt={productName}
+                  fill
+                  className="object-cover"
+                  sizes="320px"
+                  unoptimized={fallbackImageUrl.startsWith("blob:")}
+                />
+              </div>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center rounded-full border border-white/40 bg-black/30 text-xs uppercase tracking-[0.2em] text-white/80">
+                {caseDiameterMm}mm
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div className="fixed inset-0 z-50 bg-black">
-      <div className="relative h-full w-full overflow-hidden">
-        {usingUpload && uploadUrl ? (
-          <Image src={uploadUrl} alt={`${productName} try-on background`} fill className="object-cover" unoptimized />
-        ) : (
+      <TryOnStage
+        uploadBackground={
+          usingUpload && uploadUrl ? (
+            <Image
+              src={uploadUrl}
+              alt={`${productName} try-on background`}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          ) : undefined
+        }
+        video={
           <>
             <video
               ref={videoRef}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="h-full w-full object-cover"
               playsInline
               muted
               autoPlay
@@ -144,73 +205,21 @@ export function WatchTryOnOverlay({
               />
             ) : null}
           </>
-        )}
-
-        {!showPermissionFallback ? (
-          <div
-            className="absolute inset-0 touch-none"
-            onPointerDown={(event) => {
-              event.currentTarget.setPointerCapture(event.pointerId);
-              handlePointerDown(event.clientX, event.clientY);
-            }}
-            onPointerMove={(event) => handlePointerMove(event.clientX, event.clientY)}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-            onWheel={(event) => {
-              event.preventDefault();
-              adjustScale(-event.deltaY * 0.0015);
-            }}
-          >
-            <div
-              className="pointer-events-none absolute left-1/2 top-1/2"
-              style={{
-                transform: `translate(calc(-50% + ${transform.x}px), calc(-50% + ${transform.y}px)) scale(${transform.scale}) rotate(${transform.rotation}deg)`,
-              }}
-            >
-              <div
-                className="relative flex items-center justify-center"
-                style={{ width: ringSizePx, height: ringSizePx }}
-              >
-                <div
-                  className="absolute inset-0 rounded-full border-2 border-dashed border-white/70"
-                  aria-hidden
-                />
-                <div className="relative h-[78%] w-[78%]">
-                  {model3dUrl ? (
-                    <WatchViewer3D modelUrl={model3dUrl} overlayMode className="h-full w-full min-h-0" />
-                  ) : fallbackImageUrl ? (
-                    <div className="relative h-full w-full overflow-hidden rounded-full">
-                      <Image
-                        src={fallbackImageUrl}
-                        alt={productName}
-                        fill
-                        className="object-cover"
-                        sizes="320px"
-                        unoptimized={fallbackImageUrl.startsWith("blob:")}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center rounded-full border border-white/40 bg-black/30 text-xs uppercase tracking-[0.2em] text-white/80">
-                      {caseDiameterMm}mm
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        <TryOnControls
-          caseDiameterMm={caseDiameterMm}
-          displayScale={transform.scale}
-          cameraEnabled={cameraEnabled}
-          usingUpload={usingUpload}
-          onToggleCamera={handleToggleCamera}
-          onUploadPhoto={handleUploadPhoto}
-          onReset={reset}
-          onClose={onClose}
-        />
-      </div>
+        }
+        workspace={workspaceContent}
+        chrome={
+          <TryOnControls
+            caseDiameterMm={caseDiameterMm}
+            displayScale={transform.scale}
+            cameraEnabled={cameraEnabled}
+            usingUpload={usingUpload}
+            onToggleCamera={handleToggleCamera}
+            onUploadPhoto={handleUploadPhoto}
+            onReset={reset}
+            onClose={onClose}
+          />
+        }
+      />
     </div>
   );
 }
