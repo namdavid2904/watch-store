@@ -44,6 +44,17 @@ export default function ProductsPage() {
     },
   });
 
+  const uploadModel3d = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => client.uploadProductModel3d(id, file),
+    onSuccess: () => {
+      setUploadError(null);
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError: (err) => {
+      setUploadError(err instanceof Error ? err.message : "3D model upload failed");
+    },
+  });
+
   const selected = productsQuery.data?.content.find((product) => product.id === selectedId) ?? null;
   const isLoading = productsQuery.isLoading || brandsQuery.isLoading || categoriesQuery.isLoading;
 
@@ -120,6 +131,21 @@ export default function ProductsPage() {
                               }
                             }}
                           />
+                          <Input
+                            type="file"
+                            accept=".glb,.gltf,model/gltf-binary,model/gltf+json"
+                            className="max-w-44"
+                            disabled={uploadModel3d.isPending}
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (file) {
+                                uploadModel3d.mutate({ id: product.id, file });
+                              }
+                            }}
+                          />
+                          {product.model3dUrl ? (
+                            <Badge variant="accent">3D</Badge>
+                          ) : null}
                           <Button
                             size="sm"
                             variant="ghost"
