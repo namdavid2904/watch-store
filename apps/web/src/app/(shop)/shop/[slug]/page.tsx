@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@watch-store/ui";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductMediaGallery } from "@/components/product-media-gallery";
+import { ProductReviewsSection } from "@/components/product-reviews-list";
 import { ProductSpecsTable } from "@/components/product-specs-table";
 import { catalogClient, formatPrice } from "@/lib/catalog";
 
@@ -74,6 +75,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         <h2 className="font-serif text-3xl">Technical specifications</h2>
         <ProductSpecsTable product={product} />
       </section>
+
+      <ProductReviewsSection productSlug={product.slug} />
     </article>
   );
 }
