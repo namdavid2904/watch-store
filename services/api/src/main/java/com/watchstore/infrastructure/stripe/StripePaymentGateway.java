@@ -45,6 +45,9 @@ public class StripePaymentGateway implements PaymentGateway {
                 .setAutomaticPaymentMethods(
                         com.stripe.param.PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
                                 .setEnabled(true)
+                                .setAllowRedirects(
+                                        com.stripe.param.PaymentIntentCreateParams.AutomaticPaymentMethods
+                                                .AllowRedirects.NEVER)
                                 .build());
 
         if (metadata != null) {
