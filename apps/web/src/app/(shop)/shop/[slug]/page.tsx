@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductSpecsTable } from "@/components/product-specs-table";
 import { catalogClient, formatPrice } from "@/lib/catalog";
+import { getPrimaryProductImageUrl } from "@/lib/product-image";
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -32,6 +34,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     notFound();
   }
 
+  const imageUrl = getPrimaryProductImageUrl(product.images);
+
   return (
     <article className="space-y-8">
       <Link href="/shop" className="text-muted-foreground text-sm hover:underline">
@@ -39,8 +43,19 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="bg-muted flex min-h-[320px] items-center justify-center rounded-lg">
-          <span className="text-muted-foreground text-sm">{product.brandName}</span>
+        <div className="bg-muted relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-lg">
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={product.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority
+            />
+          ) : (
+            <span className="text-muted-foreground text-sm">{product.brandName}</span>
+          )}
         </div>
 
         <div className="space-y-4">
