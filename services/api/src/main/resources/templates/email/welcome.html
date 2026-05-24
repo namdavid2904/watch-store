@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body th:replace="~{email/layout :: layout(~{::content})}">
+<div th:fragment="content">
+    <p>Welcome to Watch Store,</p>
+    <p>Your account has been created for <strong th:text="${accountEmail}">you@example.com</strong>.</p>
+    <p>Discover curated timepieces, explore our collections, and enjoy a refined shopping experience tailored for watch enthusiasts.</p>
+    <p th:if="${shopUrl}">
+        <a th:href="${shopUrl}">Browse the collection</a>
+    </p>
+    <p class="muted">We are delighted to have you with us.</p>
+</div>
+</body>
+</html>
