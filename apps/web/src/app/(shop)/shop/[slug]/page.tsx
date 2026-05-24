@@ -46,6 +46,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           images={product.images}
           galleryImages={product.galleryImages ?? []}
           model3dUrl={product.model3dUrl}
+          caseDimension={product.caseDimension}
           productName={product.name}
           brandName={product.brandName}
         />
