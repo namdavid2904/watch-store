@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body th:replace="~{email/layout :: layout(~{::content})}">
+<div th:fragment="content">
+    <p>A new customer enquiry has been submitted.</p>
+
+    <p class="muted">Enquiry ID: <strong th:text="${enquiryId}">ID</strong></p>
+
+    <div class="address">
+        <strong th:text="${customerName}">Name</strong><br/>
+        <span th:text="${customerEmail}">email@example.com</span><br/>
+        <span th:if="${customerMobile}" th:text="${customerMobile}">+1 555 0100</span>
+    </div>
+
+    <p th:if="${category}">
+        <strong>Category:</strong> <span th:text="${category}">General</span>
+    </p>
+    <p th:if="${subject}">
+        <strong>Subject:</strong> <span th:text="${subject}">Subject</span>
+    </p>
+    <p th:if="${productName}">
+        <strong>Product:</strong> <span th:text="${productName}">Product</span>
+    </p>
+
+    <p><strong>Message</strong></p>
+    <div class="address" th:text="${message}">Message body</div>
+</div>
+</body>
+</html>
