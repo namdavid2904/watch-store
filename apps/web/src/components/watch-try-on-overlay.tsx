@@ -2,11 +2,16 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TryOnAlignmentGuide } from "@/components/try-on-alignment-guide";
 import { TryOnAssetLayer } from "@/components/try-on-asset-layer";
 import { TryOnControls } from "@/components/try-on-controls";
 import { TryOnGestureLayer } from "@/components/try-on-gesture-layer";
 import { TryOnStage } from "@/components/try-on-stage";
-import { TryOnLoadingState, TryOnPermissionFallback } from "@/components/try-on-status-states";
+import {
+  TryOnAssetSkeleton,
+  TryOnLoadingState,
+  TryOnPermissionFallback,
+} from "@/components/try-on-status-states";
 import { useCameraStream } from "@/hooks/use-camera-stream";
 import { useTryOnTransform } from "@/hooks/use-try-on-transform";
 import { parseCaseDiameterMm } from "@/lib/watch-sizing";
@@ -32,6 +37,7 @@ export function WatchTryOnOverlay({
   const {
     videoRef,
     permissionState,
+    isStreamReady,
     errorMessage,
     startStream,
     stopStream,
@@ -39,6 +45,7 @@ export function WatchTryOnOverlay({
   } = useCameraStream();
   const { transform, nudge, adjustScale, adjustRotation, reset } = useTryOnTransform();
   const [uploadUrl, setUploadUrl] = useState<string | null>(null);
+  const [guideDismissed, setGuideDismissed] = useState(false);
   const dragOrigin = useRef<{ x: number; y: number } | null>(null);
 
   const usingUpload = uploadUrl !== null;
@@ -54,11 +61,19 @@ export function WatchTryOnOverlay({
         setUploadUrl(null);
       }
       reset();
+      setGuideDismissed(false);
       return;
     }
 
     void startStream();
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dismissGuide = useCallback(() => {
+    setGuideDismissed(true);
+  }, []);
+
+  const backgroundReady = usingUpload || isStreamReady;
+  const showAlignmentGuide = backgroundReady && !guideDismissed && !showPermissionFallback;
 
   const handleUploadPhoto = useCallback(
     (file: File) => {
@@ -85,9 +100,13 @@ export function WatchTryOnOverlay({
     void startStream();
   }, [permissionState, startStream, toggleFacingMode, uploadUrl]);
 
-  const handlePointerDown = useCallback((clientX: number, clientY: number) => {
-    dragOrigin.current = { x: clientX, y: clientY };
-  }, []);
+  const handlePointerDown = useCallback(
+    (clientX: number, clientY: number) => {
+      dismissGuide();
+      dragOrigin.current = { x: clientX, y: clientY };
+    },
+    [dismissGuide]
+  );
 
   const handlePointerMove = useCallback(
     (clientX: number, clientY: number) => {
@@ -110,16 +129,20 @@ export function WatchTryOnOverlay({
 
   const workspaceContent = !showPermissionFallback ? (
     <TryOnGestureLayer onAdjustScale={adjustScale} onAdjustRotation={adjustRotation}>
-      <TryOnAssetLayer
-        productName={productName}
-        caseDiameterMm={caseDiameterMm}
-        transform={transform}
-        imageUrl={fallbackImageUrl}
-        model3dUrl={model3dUrl}
-        onDragStart={handlePointerDown}
-        onDragMove={handlePointerMove}
-        onDragEnd={handlePointerUp}
-      />
+      {backgroundReady ? (
+        <TryOnAssetLayer
+          productName={productName}
+          caseDiameterMm={caseDiameterMm}
+          transform={transform}
+          imageUrl={fallbackImageUrl}
+          model3dUrl={model3dUrl}
+          onDragStart={handlePointerDown}
+          onDragMove={handlePointerMove}
+          onDragEnd={handlePointerUp}
+        />
+      ) : (
+        <TryOnAssetSkeleton />
+      )}
     </TryOnGestureLayer>
   ) : null;
 
@@ -167,6 +190,7 @@ export function WatchTryOnOverlay({
             ) : null}
           </>
         }
+        guide={<TryOnAlignmentGuide visible={showAlignmentGuide} />}
         workspace={workspaceContent}
         chrome={
           <TryOnControls

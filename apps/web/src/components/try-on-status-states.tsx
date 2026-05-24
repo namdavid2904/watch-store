@@ -29,6 +29,19 @@ type TryOnPermissionFallbackProps = {
   onUpload: () => void;
 };
 
+export function TryOnAssetSkeleton() {
+  return (
+    <div
+      className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="h-[min(45vw,280px)] w-[min(45vw,280px)] animate-pulse rounded-full border-2 border-dashed border-white/30 bg-white/5" />
+      <p className="text-xs uppercase tracking-[0.2em] text-white/60">Preparing watch overlay…</p>
+    </div>
+  );
+}
+
 export function TryOnPermissionFallback({
   errorMessage,
   onRetry,

@@ -15,6 +15,7 @@ export function useCameraStream() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [permissionState, setPermissionState] = useState<CameraPermissionState>("idle");
+  const [isStreamReady, setIsStreamReady] = useState(false);
   const [facingMode, setFacingMode] = useState<FacingMode>("user");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -26,6 +27,7 @@ export function useCameraStream() {
     if (video) {
       video.srcObject = null;
     }
+    setIsStreamReady(false);
   }, []);
 
   const startStream = useCallback(async () => {
@@ -37,6 +39,7 @@ export function useCameraStream() {
 
     setPermissionState("requesting");
     setErrorMessage(null);
+    setIsStreamReady(false);
 
     try {
       stopStream();
@@ -53,13 +56,18 @@ export function useCameraStream() {
       const video = videoRef.current;
       if (video) {
         video.srcObject = stream;
+        video.onloadedmetadata = () => setIsStreamReady(true);
         await video.play();
+        if (video.readyState >= 2) {
+          setIsStreamReady(true);
+        }
       }
 
       setPermissionState("granted");
     } catch (error) {
       stopStream();
       setPermissionState("denied");
+      setIsStreamReady(false);
       setErrorMessage(error instanceof Error ? error.message : "Camera permission denied.");
     }
   }, [facingMode, stopStream]);
@@ -79,6 +87,7 @@ export function useCameraStream() {
   return {
     videoRef,
     permissionState,
+    isStreamReady,
     errorMessage,
     facingMode,
     startStream,
