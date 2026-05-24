@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@watch-store/ui";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { ProductMediaGallery } from "@/components/product-media-gallery";
 import { ProductSpecsTable } from "@/components/product-specs-table";
 import { catalogClient, formatPrice } from "@/lib/catalog";
-import { getPrimaryProductImageUrl } from "@/lib/product-image";
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -35,8 +34,6 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     notFound();
   }
 
-  const imageUrl = getPrimaryProductImageUrl(product.images);
-
   return (
     <article className="space-y-12">
       <Link href="/shop" className="text-muted-foreground text-xs uppercase tracking-[0.2em] transition hover:text-accent">
@@ -44,22 +41,13 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       </Link>
 
       <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
-        <div className="luxury-surface relative aspect-[4/5] overflow-hidden rounded-2xl">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={product.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 55vw"
-              priority
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <span className="text-muted-foreground text-sm uppercase tracking-[0.25em]">{product.brandName}</span>
-            </div>
-          )}
-        </div>
+        <ProductMediaGallery
+          images={product.images}
+          galleryImages={product.galleryImages ?? []}
+          model3dUrl={product.model3dUrl}
+          productName={product.name}
+          brandName={product.brandName}
+        />
 
         <div className="flex flex-col justify-center space-y-6">
           <div className="space-y-4">
