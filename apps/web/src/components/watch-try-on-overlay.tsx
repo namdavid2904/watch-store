@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Button } from "@watch-store/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TryOnControls } from "@/components/try-on-controls";
+import { TryOnLoadingState, TryOnPermissionFallback } from "@/components/try-on-status-states";
 import { WatchViewer3D } from "@/components/watch-viewer-3d";
 import { useCameraStream } from "@/hooks/use-camera-stream";
 import { useTryOnTransform } from "@/hooks/use-try-on-transform";
@@ -124,43 +124,24 @@ export function WatchTryOnOverlay({
               muted
               autoPlay
             />
-            {isLoading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70">
-                <div className="h-12 w-12 animate-pulse rounded-full border border-white/30" />
-                <p className="text-sm uppercase tracking-[0.2em] text-white/80">Starting camera…</p>
-              </div>
-            ) : null}
+            {isLoading ? <TryOnLoadingState /> : null}
             {showPermissionFallback ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80 p-6 text-center text-white">
-                <p className="font-serif text-2xl">Camera unavailable</p>
-                <p className="max-w-md text-sm text-white/70">
-                  {errorMessage ?? "Allow camera access or upload a wrist photo to continue sizing."}
-                </p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  <Button type="button" onClick={() => void startStream()}>
-                    Try again
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10"
-                    onClick={() => {
-                      const input = document.createElement("input");
-                      input.type = "file";
-                      input.accept = "image/*";
-                      input.onchange = () => {
-                        const file = input.files?.[0];
-                        if (file) {
-                          handleUploadPhoto(file);
-                        }
-                      };
-                      input.click();
-                    }}
-                  >
-                    Upload photo
-                  </Button>
-                </div>
-              </div>
+              <TryOnPermissionFallback
+                errorMessage={errorMessage}
+                onRetry={() => void startStream()}
+                onUpload={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = "image/*";
+                  input.onchange = () => {
+                    const file = input.files?.[0];
+                    if (file) {
+                      handleUploadPhoto(file);
+                    }
+                  };
+                  input.click();
+                }}
+              />
             ) : null}
           </>
         )}
