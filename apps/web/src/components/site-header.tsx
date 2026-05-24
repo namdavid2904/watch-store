@@ -8,6 +8,7 @@ import { useAuth } from "./auth-provider";
 
 const NAV_LINKS = [
   { href: "/shop", label: "Collection" },
+  { href: "/enquire", label: "Enquire" },
 ];
 
 export function SiteHeader() {
