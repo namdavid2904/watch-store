@@ -89,6 +89,11 @@ app:
     enabled: false
     secret-key: ${STRIPE_SECRET_KEY:sk_test_placeholder}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_placeholder}
+  mail:
+    enabled: ${APP_MAIL_ENABLED:false}
+    from-address: ${APP_MAIL_FROM_ADDRESS:noreply@localhost}
+    admin-alert-address: ${APP_MAIL_ADMIN_ALERT_ADDRESS:admin@localhost}
+    region: ${APP_MAIL_REGION:${AWS_REGION:us-east-1}}
   auth:
     refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}
     refresh-cookie-same-site: ${REFRESH_COOKIE_SAME_SITE:Lax}
