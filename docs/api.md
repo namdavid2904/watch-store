@@ -1,4 +1,4 @@
-# REST API Reference
+# API Reference
 
 Watch Store exposes a versioned JSON REST API from the Spring Boot service at [`services/api`](../services/api).
 
@@ -9,7 +9,7 @@ Watch Store exposes a versioned JSON REST API from the Spring Boot service at [`
 | Interactive docs | [Swagger UI](http://localhost:8080/swagger-ui.html) |
 | OpenAPI spec | [`services/api/openapi/watch-store-api.yaml`](../services/api/openapi/watch-store-api.yaml) |
 
-The OpenAPI file covers core catalog, cart, and checkout flows. Additional admin, account, review, and telemetry endpoints exist in Java controllers and are documented below. When in doubt, use Swagger or the controller source under [`web/controller/`](../services/api/src/main/java/com/watchstore/web/controller/).
+The OpenAPI file covers core catalog, cart, and checkout flows. Additional admin, account, review, and telemetry endpoints exist in Java controllers and are documented below.
 
 ---
 
