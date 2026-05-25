@@ -1,6 +1,6 @@
 # Local Development
 
-Definitive guide for running the Watch Store monorepo on your machine. For system design context see [architecture.md](./architecture.md); for REST details see [api.md](./api.md); for production see [deployment.md](./deployment.md).
+Guide for running the Watch Store project on your machine. For system design context see [architecture.md](./architecture.md); for REST details see [api.md](./api.md); for production see [deployment.md](./deployment.md).
 
 ---
 
@@ -11,9 +11,9 @@ Definitive guide for running the Watch Store monorepo on your machine. For syste
 | Docker Desktop / Engine | Compose v2 | Required for full stack and API integration tests |
 | Node.js | 22 LTS | `corepack enable pnpm` |
 | pnpm | 9.x | Workspace package manager |
-| Java | 21 (optional) | Only if running API outside Docker |
-| Maven | 3.9+ (optional) | Bundled wrapper: `services/api/mvnw` |
-| Stripe CLI | Latest (optional) | Local webhook forwarding for checkout |
+| Java | 21 | Only if running API outside Docker |
+| Maven | 3.9+ | Bundled wrapper: `services/api/mvnw` |
+| Stripe CLI | Latest | Local webhook forwarding for checkout |
 
 ---
 
@@ -21,7 +21,7 @@ Definitive guide for running the Watch Store monorepo on your machine. For syste
 
 Copy [`.env.example`](../.env.example) to `.env` at the repo root for production-oriented variables. **Docker Compose** injects most dev defaults directly in [`docker-compose.yml`](../docker-compose.yml).
 
-### API (local Compose defaults)
+### API
 
 | Variable | Local value | Purpose |
 |----------|-------------|---------|
@@ -34,9 +34,9 @@ Copy [`.env.example`](../.env.example) to `.env` at the repo root for production
 | `STRIPE_ENABLED` | set in `.env` for real Test Mode | Use `sk_test_` / `whsec_` |
 | `APP_MAIL_ENABLED` | `false` (default) | Logs emails instead of SES |
 
-### Frontends (`pnpm dev`)
+### Frontends
 
-Create `apps/web/.env.local` and `apps/admin/.env.local` as needed:
+Create `apps/web/.env.local` and `apps/admin/.env.local`:
 
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:8080
@@ -52,7 +52,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 | `NEXT_PUBLIC_S3_IMAGE_BASE_URL` | Prefix for product/GLB keys returned by API |
 | `S3_IMAGE_HOSTNAME` | Next.js image remotePatterns (Docker web build) |
 
-### Port and CORS note
+### Port and CORS
 
 | Mode | Customer URL | CORS |
 |------|--------------|------|
@@ -63,13 +63,13 @@ If the browser blocks API calls, confirm your origin is listed in `CORS_ORIGINS`
 
 ---
 
-## Docker Compose service matrix
+## Docker Compose service
 
 | Service | Host port | Depends on | Role |
 |---------|-----------|------------|------|
 | `postgres` | 5432 | — | Primary database |
 | `redis` | 6379 | — | Sessions, cart, catalog cache, checkout |
-| `localstack` | 4566 | — | S3 API (dev assets) |
+| `localstack` | 4566 | — | S3 API |
 | `api` | 8080 | postgres, redis, otel-collector | Spring Boot |
 | `web` | 3003 (via `WEB_HOST_PORT`) | api | Customer Next.js image |
 | `admin` | 3002 | api | Admin Next.js image |
@@ -84,7 +84,7 @@ Healthchecks: Postgres and Redis gate API startup; API healthcheck hits `/actuat
 
 ## Bootstrap paths
 
-### Full stack (recommended)
+### Full stack
 
 ```bash
 make up
@@ -107,7 +107,7 @@ pnpm dev:web      # http://localhost:3000
 pnpm dev:admin    # http://localhost:3002
 ```
 
-### API-only (IDE / Maven)
+### API-only
 
 ```bash
 docker compose up -d postgres redis localstack
@@ -141,7 +141,7 @@ Resets Postgres volume and reapplies migrations with demo products.
 
 ---
 
-## Stripe Test Mode (local)
+## Stripe Test Mode
 
 1. Create Stripe Test keys in the Dashboard.
 2. Add to `.env` (loaded by Compose for `api` if configured):
@@ -181,11 +181,11 @@ If models do not render, set `NEXT_PUBLIC_S3_IMAGE_BASE_URL` to your LocalStack 
 
 ## Email (local)
 
-With `APP_MAIL_ENABLED=false` (default), the API **logs** email payloads instead of calling AWS SES. Trigger flows:
+With `APP_MAIL_ENABLED=false`, the API **logs** email payloads instead of calling AWS SES. Trigger flows:
 
-- Register a new user (welcome email log line)
-- Submit an enquiry (admin alert log line)
-- Complete a paid order via Stripe webhook (order confirmation log line)
+- Register a new user
+- Submit an enquiry
+- Complete a paid order via Stripe webhook
 
 To test real SES locally, set `APP_MAIL_ENABLED=true` and AWS credentials (see [deployment.md](./deployment.md) SES section).
 
@@ -193,7 +193,7 @@ To test real SES locally, set `APP_MAIL_ENABLED=true` and AWS credentials (see [
 
 ## Testing and quality
 
-### API integration tests (Testcontainers)
+### API integration tests
 
 Requires Docker daemon:
 
@@ -226,7 +226,7 @@ GitHub Actions workflows:
 
 ---
 
-## Observability (local)
+## Observability
 
 | Tool | URL | Credentials |
 |------|-----|-------------|
@@ -241,17 +241,6 @@ Dashboards provisioned from [`infra/docker/grafana/`](../infra/docker/grafana/).
 ---
 
 ## Troubleshooting
-
-### Docker disk full
-
-If `make up` fails with `No space left on device` or Postgres exits immediately:
-
-```bash
-make clean-docker
-make up
-```
-
-Increase Docker Desktop **Settings → Resources → Disk image size** if needed.
 
 ### API not reachable from browser
 
@@ -275,7 +264,7 @@ Local same-site cookies work when web and API share a registrable domain. For cr
 
 ---
 
-## Related documentation
+## Related
 
 - [architecture.md](./architecture.md) — Checkout locking, caching, 3D pipeline diagrams
 - [api.md](./api.md) — Endpoint catalog and auth
