@@ -1,5 +1,14 @@
 # Deployment Guide
 
+## Related documentation
+
+- [architecture.md](./architecture.md) — System topology, checkout lifecycle, caching, 3D asset pipeline
+- [api.md](./api.md) — REST endpoints, authentication, error envelopes
+- [local-development.md](./local-development.md) — Docker Compose bootstrap, Stripe CLI, env vars
+- [README.md](../README.md) — Monorepo overview and quick start
+
+---
+
 Production uses a **split stack**: Next.js apps on **Vercel**, Spring Boot API on a **Docker host** (Render, Fly.io, or Railway), and managed **PostgreSQL**, **Redis**, and **AWS S3**. Local development stays on Docker Compose + LocalStack.
 
 ## Architecture
