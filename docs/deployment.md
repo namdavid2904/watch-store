@@ -30,7 +30,7 @@ Browser → Vercel (web, admin) → HTTPS → API (Docker) → Postgres / Redis 
 
 ## Prerequisites
 
-- GitHub repo connected to Vercel (two projects; see Phase 4)
+- GitHub repo connected to Vercel
 - Domain (optional): `api.`, `www.`, `admin.` subdomains
 - AWS account with S3 bucket
 - Managed Postgres and Redis accounts
@@ -39,9 +39,7 @@ Copy [`.env.example`](../.env.example) for variable names.
 
 ---
 
-## Phase 1 — API production settings (in repo)
-
-Already implemented in code:
+## Phase 1 — API production settings
 
 - **S3:** Leave `S3_ENDPOINT` empty for real AWS; LocalStack URL for local dev only ([`S3Config.java`](../services/api/src/main/java/com/watchstore/config/S3Config.java))
 - **Auth cookies:** `REFRESH_COOKIE_SECURE=true`, `REFRESH_COOKIE_SAME_SITE=None` for cross-origin Vercel → API
@@ -60,26 +58,26 @@ Already implemented in code:
 
 ### Redis 7
 
-1. Create a Redis instance (Upstash recommended for serverless-friendly TLS).
+1. Create a Redis instance.
 2. **Upstash:** set `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` from the console, and `REDIS_SSL_ENABLED=true`.
 3. **Non-TLS:** set `REDIS_HOST` and `REDIS_PORT`; leave `REDIS_SSL_ENABLED` unset or `false`.
 
 ### AWS S3
 
-1. Create bucket `watch-store-images` (or your name; set `S3_BUCKET`).
+1. Create bucket `watch-store-images` (set `S3_BUCKET`).
 2. Set `AWS_REGION`.
 3. Create an IAM user or role with `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` on the bucket.
-4. Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` on the API host (or use IAM role on ECS later).
+4. Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` on the API host.
 5. **Do not** set `S3_ENDPOINT` in production.
 6. For Next.js image optimization on Vercel, set `S3_IMAGE_HOSTNAME` (e.g. `bucket.s3.us-east-1.amazonaws.com`) on the **web** project.
 
 ### Secrets
 
-Generate a strong `JWT_SECRET` (256+ bits). Store all secrets in the host platform and Vercel env UIs — never commit them.
+Generate a `JWT_SECRET` (256+ bits). Store all secrets in the host platform and Vercel env UIs.
 
-### Admin user (production)
+### Admin user
 
-Demo users are **not** seeded in `prod`. Create an admin after deploy:
+Create an admin after deploy:
 
 - Register via API and promote in DB, or
 - Run a one-off SQL insert with a BCrypt hash, or
@@ -117,7 +115,7 @@ APP_MAIL_REGION=us-east-1
 
 ### Render
 
-Example blueprint: [`infra/deploy/render.yaml`](../infra/deploy/render.yaml). Create a **Web Service → Docker**, health check **`/api/v1/ping`** (not `/actuator/health` — that endpoint includes Redis and will fail if Redis env is wrong), attach env vars from Phase 2.
+Example: [`infra/deploy/render.yaml`](../infra/deploy/render.yaml). Create a **Web Service → Docker**, health check **`/api/v1/ping`** (not `/actuator/health` — that endpoint includes Redis and will fail if Redis env is wrong), attach env vars from Phase 2.
 
 **Docker settings (required)** — use **one** of these; wrong context causes `"/src": not found` and build context ~2B:
 
@@ -341,18 +339,12 @@ flowchart LR
 
 ---
 
-## Local development (unchanged)
+## Local development
 
 ```bash
 make up
 ```
 
 Uses `SPRING_PROFILES_ACTIVE=dev`, LocalStack, and Flyway seeds. See [local-development.md](./local-development.md).
-
-## Optional: Compose prod overlay
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d api
-```
 
 Use for API-only testing with prod profile; production should use managed DB/Redis/S3, not bundled Compose databases.
