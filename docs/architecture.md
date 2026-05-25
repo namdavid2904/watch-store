@@ -1,28 +1,12 @@
 # System Architecture
 
-Deep-dive architecture for the Watch Store monorepo. This document aligns with the [Watch Store Modernization Plan](/Users/phamphuongnam/.cursor/plans/watch_store_modernization_d8d18826.plan.md) and describes **what is implemented today**.
+Deep-dive architecture for Watch Store.
 
 For deployment topology (Vercel + managed services), see [deployment.md](./deployment.md). For REST contracts, see [api.md](./api.md).
 
 ---
 
-## Modernization status
-
-| Plan phase | Scope | Implementation status |
-|------------|--------|------------------------|
-| 1 — Scaffolding | Monorepo, Docker Compose, shared packages | **Complete** — `apps/web`, `apps/admin`, `services/api`, `packages/*`, [docker-compose.yml](../docker-compose.yml) |
-| 2 — Database | Flyway, JPA entities, seeds, Testcontainers | **Complete** — `db/migration/V1`–`V11`, integration tests |
-| 3 — Auth | JWT, OAuth2, Redis refresh tokens, RBAC | **Complete** — [`AuthController`](../services/api/src/main/java/com/watchstore/web/controller/AuthController.java), `@PreAuthorize` on admin routes |
-| 4 — Catalog | Search/filter, Redis cache, 3D PDP, VTO | **Complete** — catalog cache 60s TTL; GLB on PDP + 3D-primary VTO overlay |
-| 5 — Cart | Redis cart, guest merge, wishlist | **Complete** — [`CartService`](../services/api/src/main/java/com/watchstore/service/CartService.java) |
-| 6 — Checkout | Inventory locks, orders, Stripe | **Complete** — Redis checkout lock + DB reservation; Stripe PaymentIntent + webhook |
-| 7 — Admin | Dashboard, inventory, orders, enquiries | **Complete** — `apps/admin` + `/api/v1/admin/*` |
-| 8 — Observability & email | Metrics, tracing, SES | **Partial** — Prometheus/Grafana/Jaeger/OTel in Compose; AWS SES transactional email in API |
-| 9 — Cloud deploy | K8s, Terraform | **Roadmap** — examples under `infra/`; production path documented in [deployment.md](./deployment.md) |
-
----
-
-## System topology
+## System Diagram
 
 Local development runs all tiers on Docker Compose with direct `localhost` ports. Production splits Next.js apps (Vercel) from the containerized API and managed Postgres, Redis, and S3.
 
@@ -88,25 +72,25 @@ flowchart TB
   Prom --> Grafana
 ```
 
-### Interaction summary
+### Interaction Summary
 
 | Concern | Technology | Notes |
 |---------|------------|--------|
-| Customer & admin UI | Next.js 15 App Router | Shared [`packages/ui`](../packages/ui); API via [`packages/api-client`](../packages/api-client) |
+| Customer & admin UI | Next.js 15 | Shared [`packages/ui`](../packages/ui); API via [`packages/api-client`](../packages/api-client) |
 | API | Spring Boot 3, Java 21 | Virtual threads-friendly stack; OpenAPI at `/swagger-ui.html` |
 | Relational data | PostgreSQL 16 | ACID orders/inventory; watch specs as columns + JSONB (`images`, `shipping_address`) |
 | Cache & ephemeral state | Redis 7 | Refresh tokens, cart hashes, catalog page cache, checkout locks, reservation metadata |
-| Object storage | S3 (LocalStack `:4566` in dev) | Product images, gallery, `.glb` / `.gltf` models |
+| Object storage | S3 | Product images, gallery, `.glb` / `.gltf` models |
 | Auth | JWT access + httpOnly refresh cookie | Guest cart header `X-Cart-Session-Id` |
 | Payments | Stripe Test/Live | `STRIPE_ENABLED`; webhook idempotency table `stripe_webhook_events` |
-| Email | SES v2 (logging stub when disabled) | Order confirmation, welcome, admin enquiry alerts |
+| Email | SES v2 | Order confirmation, welcome, admin enquiry alerts |
 
 ### Local Compose services
 
 | Service | Port | Role |
 |---------|------|------|
 | `api` | 8080 | Spring Boot API |
-| `web` | 3003 (default) | Customer Next.js (Docker) |
+| `web` | 3003 | Customer Next.js (Docker) |
 | `admin` | 3002 | Admin Next.js |
 | `postgres` | 5432 | Primary database |
 | `redis` | 6379 | Cache and locks |
@@ -118,7 +102,7 @@ flowchart TB
 
 ---
 
-## Resilient checkout and payment lifecycle
+## Checkout and Payment Lifecycle
 
 Checkout uses a **two-layer inventory model**: Redis coordinates checkout sessions and reservation metadata; PostgreSQL applies **pessimistic row locks** (`findByProductIdForUpdate`) when moving stock between `quantity_available` and `quantity_reserved`.
 
@@ -184,7 +168,7 @@ Implementation references: [`CheckoutService.java`](../services/api/src/main/jav
 
 ---
 
-## 3D asset pipeline
+## 3D Asset Pipeline
 
 3D models are optional per product. The customer experience prefers **GLB in WebGL** with a **2D dial fallback** when the model is missing or fails to load.
 
@@ -224,18 +208,18 @@ flowchart LR
   VTO --> Fallback
 ```
 
-### VTO render policy
+### VTO Render Policy
 
 - **Primary:** `TryOnWatchCanvas` (transparent React Three Fiber canvas, environmental lighting, mesh transforms via [`toOverlayGroupTransform`](../apps/web/src/lib/try-on-transform-math.ts)).
 - **Fallback:** Next.js `Image` when `model3dUrl` is absent or `onLoadError` sets `model3dFailed`.
 - **Lifecycle:** `useGLTF.preload` when overlay opens; `key={model3dUrl}` remount; cloned scene disposed on unmount ([`try-on-model-loader.ts`](../apps/web/src/lib/try-on-model-loader.ts)).
 - **PDP coexistence:** PDP [`WatchViewer3D`](../apps/web/src/components/watch-viewer-3d.tsx) unmounts while VTO is open to avoid dual WebGL contexts ([`product-media-gallery.tsx`](../apps/web/src/components/product-media-gallery.tsx)).
 
-Schema migration: [`V8__product_3d_assets.sql`](../services/api/src/main/resources/db/migration/V8__product_3d_assets.sql) adds `model_3d_url` (S3 object key, not a full URL).
+Schema migration: [`V8__product_3d_assets.sql`](../services/api/src/main/resources/db/migration/V8__product_3d_assets.sql) adds `model_3d_url` (S3 object key).
 
 ---
 
-## Database schema
+## Database Schema
 
 Core tables from Flyway migrations (`V1` foundation + incremental features):
 
@@ -253,7 +237,7 @@ Core tables from Flyway migrations (`V1` foundation + incremental features):
 | `product_reviews` | Verified purchase reviews (`V9`) |
 | `stripe_webhook_events` | Webhook idempotency (`V7`) |
 
-Watch-specific attributes are stored on `products` (movement type, case material/dimension, water resistance, etc.) rather than a separate document store, keeping filter queries index-friendly.
+Watch-specific attributes are stored on `products` (movement type, case material/dimension, water resistance, etc), keeping filter queries index-friendly.
 
 Entity mapping: [`services/api/src/main/java/com/watchstore/domain/entity/`](../services/api/src/main/java/com/watchstore/domain/entity/).
 
@@ -274,39 +258,39 @@ Cache invalidation: product mutations from admin APIs should evict catalog keys 
 
 ---
 
-## Network and security blueprint
+## Network and Security
 
-### API exposure
+### API
 
 - Base path: `/api/v1/*`
 - Health: `GET /api/v1/ping`
-- Actuator: `/actuator/health`, `/actuator/prometheus` (scraped locally by Prometheus)
+- Actuator: `/actuator/health`, `/actuator/prometheus`
 - Interactive docs: `http://localhost:8080/swagger-ui.html`
 
-### CORS and cookies
+### CORS and Cookies
 
 - `CORS_ORIGINS` lists allowed Next.js origins (local: `3000`, `3002`, `3003`; production: Vercel domains).
 - **Access token:** `Authorization: Bearer <jwt>` on API calls from browsers.
 - **Refresh token:** httpOnly cookie set by [`AuthCookieService`](../services/api/src/main/java/com/watchstore/security/AuthCookieService.java); production uses `REFRESH_COOKIE_SECURE=true` and `SameSite=None` for cross-site Vercel → API ([deployment.md](./deployment.md)).
 
-### Guest cart
+### Guest Cart
 
 - Header: `X-Cart-Session-Id` (client-generated UUID) on cart and checkout initiate routes.
 - On login/register, [`CartService.mergeGuestCartIntoUser`](../services/api/src/main/java/com/watchstore/service/CartService.java) consolidates guest lines into the authenticated cart.
 
-### Stripe webhooks
+### Stripe Webhooks
 
 - Endpoint: `POST /api/v1/webhooks/stripe` (unsigned in dev only when configured; verifies `Stripe-Signature` in production).
 - Processed asynchronously in the request thread with idempotent persistence before side effects.
 
-### Object storage URLs
+### Object Storage URLs
 
-- API stores **S3 keys** in the database; frontends resolve public URLs via `NEXT_PUBLIC_S3_IMAGE_BASE_URL` / hostname allowlisting for Next.js Image optimization.
+- API stores **S3 keys** in the database; frontends resolve public URLs via `NEXT_PUBLIC_S3_IMAGE_BASE_URL`.
 
 ---
 
-## Related documentation
+## Related
 
 - [api.md](./api.md) — REST endpoint catalog and auth payloads
 - [local-development.md](./local-development.md) — Bootstrap and integration testing
-- [deployment.md](./deployment.md) — Production environment matrix
+- [deployment.md](./deployment.md) — Production environment
