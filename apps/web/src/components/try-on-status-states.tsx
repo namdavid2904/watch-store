@@ -29,6 +29,21 @@ type TryOnPermissionFallbackProps = {
   onUpload: () => void;
 };
 
+export function TryOnCanvasLoadingState() {
+  return (
+    <div
+      className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-2">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+        <p className="text-[9px] uppercase tracking-[0.15em] text-white/70">Loading 3D model…</p>
+      </div>
+    </div>
+  );
+}
+
 export function TryOnAssetSkeleton() {
   return (
     <div

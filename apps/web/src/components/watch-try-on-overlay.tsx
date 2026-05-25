@@ -14,6 +14,7 @@ import {
 } from "@/components/try-on-status-states";
 import { useCameraStream } from "@/hooks/use-camera-stream";
 import { useTryOnTransform } from "@/hooks/use-try-on-transform";
+import { preloadTryOnModel } from "@/lib/try-on-model-loader";
 import { parseCaseDiameterMm } from "@/lib/watch-sizing";
 
 type WatchTryOnOverlayProps = {
@@ -67,6 +68,12 @@ export function WatchTryOnOverlay({
 
     void startStream();
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (open && model3dUrl) {
+      preloadTryOnModel(model3dUrl);
+    }
+  }, [open, model3dUrl]);
 
   const dismissGuide = useCallback(() => {
     setGuideDismissed(true);
