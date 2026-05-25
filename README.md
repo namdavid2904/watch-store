@@ -1,6 +1,6 @@
 # Watch Store
 
-A production-grade luxury watch e-commerce platform: high-concurrency Spring Boot API, dual Next.js 15 frontends, Redis-backed carts and checkout locks, Stripe payments, 3D product viewports, virtual try-on (VTO), and operational observability—all in a single **pnpm monorepo**.
+A production-grade luxury watch e-commerce platform: high-concurrency Spring Boot API, dual Next.js 15 frontends, Redis-backed carts and checkout locks, Stripe payments, 3D product viewports, virtual try-on (VTO), and operational observability.
 
 ## Highlights
 
@@ -10,7 +10,7 @@ A production-grade luxury watch e-commerce platform: high-concurrency Spring Boo
 - **Auth** — JWT access tokens, httpOnly refresh cookies, Google OAuth2, guest cart merge
 - **Admin operations** — Inventory, orders, analytics telemetry, enquiry workflow, 3D model upload to S3
 - **Email** — AWS SES transactional templates (order confirmation, welcome, admin enquiry alerts)
-- **Observability** — Prometheus metrics, Grafana dashboards, OpenTelemetry → Jaeger (local Compose)
+- **Observability** — Prometheus metrics, Grafana dashboards, OpenTelemetry
 
 ## Tech stack
 
@@ -23,8 +23,8 @@ A production-grade luxury watch e-commerce platform: high-concurrency Spring Boo
 | API | Spring Boot 3, Java 21 (`services/api`) |
 | Database | PostgreSQL 16 |
 | Cache & locks | Redis 7 |
-| Media | AWS S3 (LocalStack in dev) |
-| Payments | Stripe (Test mode supported) |
+| Media | AWS S3 |
+| Payments | Stripe |
 | Metrics | Micrometer → Prometheus → Grafana |
 
 ## Quick start
@@ -49,7 +49,7 @@ curl http://localhost:8080/api/v1/ping
 # {"status":"ok"}
 ```
 
-## Architecture (overview)
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -63,7 +63,7 @@ flowchart LR
 
 Full topology, checkout sequence, 3D pipeline, and caching policies: **[docs/architecture.md](docs/architecture.md)**.
 
-## Monorepo layout
+## Repo Structure
 
 ```
 watch-store/
@@ -110,7 +110,3 @@ make down                 # Stop Compose stack
 ## Deployment
 
 Production uses **Vercel** for Next.js apps and a **Docker-hosted API** with managed PostgreSQL, Redis, and S3. See **[docs/deployment.md](docs/deployment.md)** for environment variables, Stripe webhooks, and SES setup.
-
-## License
-
-Proprietary — internal modernization project.
