@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TryOnTransform } from "@/hooks/use-try-on-transform";
 import { TryOnWatchCanvas } from "@/components/try-on-watch-canvas";
 import { computeOverlayDiameterPx } from "@/lib/watch-sizing";
@@ -28,6 +28,11 @@ export function TryOnAssetLayer({
   onDragEnd,
 }: TryOnAssetLayerProps) {
   const [model3dFailed, setModel3dFailed] = useState(false);
+
+  useEffect(() => {
+    setModel3dFailed(false);
+  }, [model3dUrl]);
+
   const sizePx = computeOverlayDiameterPx(caseDiameterMm, transform.scale);
   const innerSizePx = Math.round(sizePx * 0.72);
 
