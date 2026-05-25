@@ -6,6 +6,7 @@ import { Component, Suspense, useEffect, type ReactNode } from "react";
 import type { TryOnTransform } from "@/hooks/use-try-on-transform";
 import { TryOnCanvasLoadingState } from "@/components/try-on-status-states";
 import { disposeClonedScene, useClonedTryOnScene } from "@/lib/try-on-model-loader";
+import { toOverlayGroupTransform } from "@/lib/try-on-transform-math";
 
 type ViewerErrorBoundaryProps = {
   children: ReactNode;
@@ -54,9 +55,13 @@ function WatchModel({ modelUrl }: WatchModelProps) {
 
 type OverlaySceneProps = {
   modelUrl: string;
+  caseDiameterMm: number;
+  transform: TryOnTransform;
 };
 
-function OverlayScene({ modelUrl }: OverlaySceneProps) {
+function OverlayScene({ modelUrl, caseDiameterMm, transform }: OverlaySceneProps) {
+  const groupTransform = toOverlayGroupTransform(transform, caseDiameterMm);
+
   return (
     <>
       <ambientLight intensity={0.55} />
@@ -64,7 +69,13 @@ function OverlayScene({ modelUrl }: OverlaySceneProps) {
       <directionalLight intensity={0.45} position={[-4, 2, -3]} />
       <pointLight intensity={0.35} position={[0, 3, 2]} />
       <Environment preset="city" environmentIntensity={0.45} />
-      <WatchModel modelUrl={modelUrl} />
+      <group
+        position={groupTransform.position}
+        rotation={groupTransform.rotation}
+        scale={groupTransform.scale}
+      >
+        <WatchModel modelUrl={modelUrl} />
+      </group>
     </>
   );
 }
@@ -74,10 +85,16 @@ export type TryOnWatchCanvasProps = {
   width: number;
   height: number;
   transform: TryOnTransform;
+  caseDiameterMm: number;
   onLoadError?: () => void;
 };
 
-function TryOnWatchCanvasInner({ modelUrl, onLoadError }: TryOnWatchCanvasProps) {
+function TryOnWatchCanvasInner({
+  modelUrl,
+  transform,
+  caseDiameterMm,
+  onLoadError,
+}: TryOnWatchCanvasProps) {
   return (
     <ViewerErrorBoundary onError={onLoadError}>
       <Canvas
@@ -86,7 +103,7 @@ function TryOnWatchCanvasInner({ modelUrl, onLoadError }: TryOnWatchCanvasProps)
         style={{ width: "100%", height: "100%", background: "transparent" }}
         dpr={[1, 2]}
       >
-        <OverlayScene modelUrl={modelUrl} />
+        <OverlayScene modelUrl={modelUrl} caseDiameterMm={caseDiameterMm} transform={transform} />
       </Canvas>
     </ViewerErrorBoundary>
   );
