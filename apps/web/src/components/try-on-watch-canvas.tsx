@@ -1,6 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
+import { Environment } from "@react-three/drei";
 import { Component, Suspense, useEffect, type ReactNode } from "react";
 import type { TryOnTransform } from "@/hooks/use-try-on-transform";
 import { TryOnCanvasLoadingState } from "@/components/try-on-status-states";
@@ -58,8 +59,11 @@ type OverlaySceneProps = {
 function OverlayScene({ modelUrl }: OverlaySceneProps) {
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <directionalLight intensity={1.1} position={[4, 4, 5]} />
+      <ambientLight intensity={0.55} />
+      <directionalLight intensity={1.25} position={[5, 6, 4]} />
+      <directionalLight intensity={0.45} position={[-4, 2, -3]} />
+      <pointLight intensity={0.35} position={[0, 3, 2]} />
+      <Environment preset="city" environmentIntensity={0.45} />
       <WatchModel modelUrl={modelUrl} />
     </>
   );
